@@ -1,9 +1,10 @@
+import { and, asc, eq, ne, or } from "drizzle-orm";
 import { Elysia, t } from "elysia";
-import {
-	authContext,
-	findUserById,
-	listAllUsers,
-} from "../lib/xors-identity";
+import { db } from "../db/client";
+import { messages, users as usersTable } from "../db/schema";
+import { genId } from "../lib/ids";
+import { errorSchema } from "../lib/route-helpers";
+import { authContext, findUserById } from "../lib/xors-identity";
 
 export interface Message {
 	id: string;
@@ -13,13 +14,14 @@ export interface Message {
 	createdAt: string;
 }
 
-// WARNING: in-memory only — restart loses every message. Swap for a
-// real DB before production. Route shapes are deliberately compatible
-// with a SQL `messages` table keyed by (from_user_id, to_user_id).
-const messages: Message[] = [];
-
-function generateMessageId(): string {
-	return `msg_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+function rowToMessage(row: typeof messages.$inferSelect): Message {
+	return {
+		id: row.id,
+		fromUserId: row.fromXorsUserId,
+		toUserId: row.toXorsUserId,
+		content: row.content,
+		createdAt: row.createdAt.toISOString(),
+	};
 }
 
 const messageSchema = t.Object({
@@ -36,21 +38,26 @@ const userSchema = t.Object({
 	displayName: t.Union([t.String(), t.Null()]),
 });
 
-const errorSchema = t.Object({ error: t.String() });
-
 export const messagesRoutes = new Elysia({ prefix: "/messages" })
 	.use(authContext)
 	.get(
 		"/",
-		({ currentUser, set }) => {
+		async ({ currentUser, set }) => {
 			if (!currentUser) {
 				set.status = 401;
 				return { error: "Not authenticated" };
 			}
-			const mine = messages.filter(
-				(m) => m.fromUserId === currentUser.id || m.toUserId === currentUser.id,
-			);
-			return { messages: mine };
+			const rows = await db
+				.select()
+				.from(messages)
+				.where(
+					or(
+						eq(messages.fromXorsUserId, currentUser.id),
+						eq(messages.toXorsUserId, currentUser.id),
+					),
+				)
+				.orderBy(asc(messages.createdAt));
+			return { messages: rows.map(rowToMessage) };
 		},
 		{
 			response: {
@@ -62,28 +69,39 @@ export const messagesRoutes = new Elysia({ prefix: "/messages" })
 	)
 	.get(
 		"/with/:userId",
-		({ currentUser, params: { userId }, set }) => {
+		async ({ currentUser, params: { userId }, set }) => {
 			if (!currentUser) {
 				set.status = 401;
 				return { error: "Not authenticated" };
 			}
-			const other = findUserById(userId);
+			const other = await findUserById(userId);
 			if (!other) {
 				set.status = 404;
 				return { error: "User not found" };
 			}
-			const thread = messages.filter(
-				(m) =>
-					(m.fromUserId === currentUser.id && m.toUserId === other.id) ||
-					(m.fromUserId === other.id && m.toUserId === currentUser.id),
-			);
+			const rows = await db
+				.select()
+				.from(messages)
+				.where(
+					or(
+						and(
+							eq(messages.fromXorsUserId, currentUser.id),
+							eq(messages.toXorsUserId, other.id),
+						),
+						and(
+							eq(messages.fromXorsUserId, other.id),
+							eq(messages.toXorsUserId, currentUser.id),
+						),
+					),
+				)
+				.orderBy(asc(messages.createdAt));
 			return {
 				with: {
 					id: other.id,
 					email: other.email,
 					displayName: other.displayName,
 				},
-				messages: thread,
+				messages: rows.map(rowToMessage),
 			};
 		},
 		{
@@ -104,12 +122,12 @@ export const messagesRoutes = new Elysia({ prefix: "/messages" })
 	)
 	.post(
 		"/",
-		({ currentUser, body, set }) => {
+		async ({ currentUser, body, set }) => {
 			if (!currentUser) {
 				set.status = 401;
 				return { error: "Not authenticated" };
 			}
-			const recipient = findUserById(body.toUserId);
+			const recipient = await findUserById(body.toUserId);
 			if (!recipient) {
 				set.status = 404;
 				return { error: "Recipient not found" };
@@ -118,15 +136,16 @@ export const messagesRoutes = new Elysia({ prefix: "/messages" })
 				set.status = 400;
 				return { error: "Cannot send a message to yourself" };
 			}
-			const message: Message = {
-				id: generateMessageId(),
-				fromUserId: currentUser.id,
-				toUserId: recipient.id,
-				content: body.content,
-				createdAt: new Date().toISOString(),
-			};
-			messages.push(message);
-			return { message };
+			const [row] = await db
+				.insert(messages)
+				.values({
+					id: genId("msg"),
+					fromXorsUserId: currentUser.id,
+					toXorsUserId: recipient.id,
+					content: body.content,
+				})
+				.returning();
+			return { message: rowToMessage(row) };
 		},
 		{
 			body: t.Object({
@@ -144,19 +163,22 @@ export const messagesRoutes = new Elysia({ prefix: "/messages" })
 	)
 	.get(
 		"/recipients",
-		({ currentUser, set }) => {
+		async ({ currentUser, set }) => {
 			if (!currentUser) {
 				set.status = 401;
 				return { error: "Not authenticated" };
 			}
-			const others = listAllUsers()
-				.filter((u) => u.id !== currentUser.id)
-				.map((u) => ({
-					id: u.id,
+			const rows = await db
+				.select()
+				.from(usersTable)
+				.where(ne(usersTable.xorsUserId, currentUser.id));
+			return {
+				users: rows.map((u) => ({
+					id: u.xorsUserId,
 					email: u.email,
 					displayName: u.displayName,
-				}));
-			return { users: others };
+				})),
+			};
 		},
 		{
 			response: {
