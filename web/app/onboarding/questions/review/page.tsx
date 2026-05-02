@@ -8,7 +8,7 @@ import { QUESTION_LIBRARY } from "../_lib/library"
 type CustomQuestion = {
 	id: string
 	text: string
-	photoDataUrl?: string
+	photoUrl?: string
 	preface?: string
 }
 
@@ -63,7 +63,7 @@ export default function ReviewQuestionsPage() {
 			id,
 			text: edits[id] ?? baseText,
 			isCustom: Boolean(customQ),
-			photoDataUrl: customQ?.photoDataUrl,
+			photoUrl: customQ?.photoUrl,
 		}
 	}
 
@@ -214,7 +214,7 @@ export default function ReviewQuestionsPage() {
 										</span>
 										<span className="text-base text-neutral-900 leading-snug">
 											{item.text}
-											{item.photoDataUrl && (
+											{item.photoUrl && (
 												<span className="text-neutral-500"> — with photo</span>
 											)}
 										</span>

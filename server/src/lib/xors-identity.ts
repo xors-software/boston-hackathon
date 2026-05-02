@@ -80,12 +80,34 @@ function upsertFromViewer(viewer: XorsViewer): AppUser {
 	return fresh;
 }
 
+// Test bypass: when TEST_USER_EMAIL is set the server treats every request as
+// authenticated as that synthetic user. Used by /tmp/ember-e2e.sh and local
+// curl-driven flows where standing up real XORS auth is overkill.
+function syntheticTestUser(): AppUser | null {
+	const email = process.env.TEST_USER_EMAIL?.toLowerCase();
+	if (!email) return null;
+	const xorsUserId = `test_${email}`;
+	const existing = usersByXorsId.get(xorsUserId);
+	if (existing) return existing;
+	const fresh: AppUser = {
+		id: generateLocalUserId(),
+		email,
+		displayName: null,
+		createdAt: new Date().toISOString(),
+		xorsUserId,
+	};
+	usersByXorsId.set(xorsUserId, fresh);
+	usersByEmail.set(email, fresh);
+	return fresh;
+}
+
 async function resolveCurrentUser(headers: Headers): Promise<AppUser | null> {
 	const sessionKey = readCookie(headers, XORS_SESSION_COOKIE);
-	if (!sessionKey) return null;
-	const viewer = await fetchXorsViewer(sessionKey);
-	if (!viewer) return null;
-	return upsertFromViewer(viewer);
+	if (sessionKey) {
+		const viewer = await fetchXorsViewer(sessionKey);
+		if (viewer) return upsertFromViewer(viewer);
+	}
+	return syntheticTestUser();
 }
 
 export const authContext = new Elysia({ name: "auth-context" }).derive(
