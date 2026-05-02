@@ -39,12 +39,12 @@ export function renderHtml(input: SendInvitationInput): string {
 <p style="margin:0 0 24px;font-size:18px;line-height:1.7;color:#2a2a28;">${safeRecipient} —</p>
 <p style="margin:0 0 24px;font-size:18px;line-height:1.7;color:#2a2a28;">I made you something. Open when you have a quiet minute.</p>
 <p style="margin:0 0 32px;font-size:17px;line-height:1.7;color:#5a5a56;">There's no rush. Answer one question, leave it for a week, come back when it feels right. The whole thing is built around your pace.</p>
-<table role="presentation" cellpadding="0" cellspacing="0" align="left">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 36px;">
 <tr><td>
 <a href="${safeLink}" style="display:inline-block;background:#1a1a1a;color:#ffffff;padding:14px 28px;border-radius:999px;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;font-size:15px;font-weight:500;">Open your gift</a>
 </td></tr>
 </table>
-<p style="margin:36px 0 0;font-size:18px;line-height:1.7;color:#2a2a28;">Love,<br />${safeGiver}</p>
+<p style="margin:0;font-size:18px;line-height:1.7;color:#2a2a28;">Love,<br />${safeGiver}</p>
 </td></tr>
 <tr><td style="padding:20px 36px 36px;border-top:1px solid #f0eeea;">
 <p style="margin:0;font-size:13px;line-height:1.6;color:#8a8a86;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;">If the button doesn't work, paste this into your browser:<br /><span style="color:#5a5a56;word-break:break-all;">${safeLink}</span></p>
