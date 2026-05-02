@@ -3,10 +3,12 @@ import { swagger } from "@elysiajs/swagger";
 import { Elysia } from "elysia";
 import { aiRoutes } from "./routes/ai";
 import { authRoutes } from "./routes/auth";
+import { giftsRoutes } from "./routes/gifts";
 import { healthRoutes } from "./routes/health";
 import { messagesRoutes } from "./routes/messages";
+import { questionTemplatesRoutes } from "./routes/question-templates";
+import { recipientRoutes } from "./routes/recipient";
 import { transcribeRoutes } from "./routes/transcribe";
-import { usersRoutes } from "./routes/users";
 
 // Loud boot log: missing API_AES_KEY/API_IV_KEY breaks /oauth decrypt,
 // and a silent failure is hard to diagnose in deploy logs.
@@ -44,10 +46,12 @@ const app = new Elysia()
 	)
 	.use(healthRoutes)
 	.use(authRoutes)
-	.use(usersRoutes)
 	.use(messagesRoutes)
 	.use(transcribeRoutes)
 	.use(aiRoutes)
+	.use(questionTemplatesRoutes)
+	.use(giftsRoutes)
+	.use(recipientRoutes)
 	.listen(process.env.PORT || 3001);
 
 console.log(

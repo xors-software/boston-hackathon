@@ -1,6 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { useOnboardingState } from "../_lib/state"
 
 const SUBJECT: Record<string, string> = {
@@ -13,9 +14,24 @@ const SUBJECT: Record<string, string> = {
 export default function SentPage() {
 	const router = useRouter()
 	const { state } = useOnboardingState()
+	const [copied, setCopied] = useState(false)
 
 	const intent = (state.data.intent as string | undefined) ?? "loved-one"
 	const subject = SUBJECT[intent] ?? "they"
+	const token = state.data.recipientToken as string | undefined
+	const recipientLink =
+		token && typeof window !== "undefined"
+			? `${window.location.origin}/r/${token}`
+			: null
+
+	const copyLink = async () => {
+		if (!recipientLink) return
+		try {
+			await navigator.clipboard.writeText(recipientLink)
+			setCopied(true)
+			setTimeout(() => setCopied(false), 2000)
+		} catch {}
+	}
 
 	return (
 		<main className="min-h-dvh bg-white flex flex-col">
@@ -47,6 +63,25 @@ export default function SentPage() {
 					<p className="text-base text-neutral-500 leading-relaxed mb-10">
 						You'll hear back when {subject} opens it.
 					</p>
+
+					{recipientLink && (
+						<div className="w-full mb-10 rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-4 text-left">
+							<div className="text-xs uppercase tracking-wider text-neutral-500 mb-2">
+								Recipient link (preview — email delivery isn't wired yet)
+							</div>
+							<div className="break-all text-sm text-neutral-800 font-mono">
+								{recipientLink}
+							</div>
+							<button
+								type="button"
+								onClick={copyLink}
+								className="mt-3 text-sm text-neutral-700 underline underline-offset-2 hover:text-neutral-900 transition-colors"
+							>
+								{copied ? "Copied" : "Copy link"}
+							</button>
+						</div>
+					)}
+
 					<button
 						type="button"
 						onClick={() => router.push("/dashboard")}

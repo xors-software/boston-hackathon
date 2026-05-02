@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { clearStoredGiftId } from "./sync"
 
 const STORAGE_KEY = "ember:onboarding:v1"
 
@@ -61,6 +62,7 @@ export function useOnboardingState() {
 		try {
 			localStorage.removeItem(STORAGE_KEY)
 		} catch {}
+		clearStoredGiftId()
 		setState(DEFAULT_STATE)
 	}
 
