@@ -1,5 +1,6 @@
 import { Elysia } from "elysia";
 import { readCookie } from "./cookies";
+import { getSql } from "./pg";
 
 const XORS_API_URL =
 	process.env.XORS_API_URL ||
@@ -8,12 +9,14 @@ const XORS_API_URL =
 
 export const XORS_SESSION_COOKIE = "xors_session";
 
+// AppUser.id IS the xors_user_id — single identity column, no local
+// indirection. Cross-references between tables (messages.from/to,
+// future FKs) all use this column directly.
 export interface AppUser {
 	id: string;
 	email: string;
 	displayName: string | null;
 	createdAt: string;
-	xorsUserId: string;
 }
 
 interface XorsViewer {
@@ -23,11 +26,23 @@ interface XorsViewer {
 	level?: string | number | null;
 }
 
-const usersByXorsId = new Map<string, AppUser>();
-const usersByEmail = new Map<string, AppUser>();
+interface UserRow {
+	xors_user_id: string;
+	email: string;
+	display_name: string | null;
+	created_at: Date | string;
+}
 
-function generateLocalUserId(): string {
-	return `usr_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+function rowToUser(r: UserRow): AppUser {
+	return {
+		id: r.xors_user_id,
+		email: r.email,
+		displayName: r.display_name,
+		createdAt:
+			r.created_at instanceof Date
+				? r.created_at.toISOString()
+				: r.created_at,
+	};
 }
 
 async function fetchXorsViewer(sessionKey: string): Promise<XorsViewer | null> {
@@ -51,33 +66,22 @@ async function fetchXorsViewer(sessionKey: string): Promise<XorsViewer | null> {
 	}
 }
 
-function upsertFromViewer(viewer: XorsViewer): AppUser {
+async function upsertFromViewer(viewer: XorsViewer): Promise<AppUser> {
+	const sql = getSql();
 	const email = (viewer.email ?? "").toLowerCase();
 	const displayName = viewer.username ?? null;
 
-	const existing = usersByXorsId.get(viewer.id);
-	if (existing) {
-		if (email && existing.email !== email) {
-			usersByEmail.delete(existing.email);
-			existing.email = email;
-			usersByEmail.set(email, existing);
-		}
-		if (existing.displayName !== displayName) {
-			existing.displayName = displayName;
-		}
-		return existing;
-	}
-
-	const fresh: AppUser = {
-		id: generateLocalUserId(),
-		email,
-		displayName,
-		createdAt: new Date().toISOString(),
-		xorsUserId: viewer.id,
-	};
-	usersByXorsId.set(viewer.id, fresh);
-	if (email) usersByEmail.set(email, fresh);
-	return fresh;
+	// Upsert keyed on xors_user_id. ON CONFLICT keeps email/display_name
+	// fresh — drift at xors propagates here on the next sign-in.
+	const rows = await sql<UserRow[]>`
+		INSERT INTO users (xors_user_id, email, display_name)
+		VALUES (${viewer.id}, ${email}, ${displayName})
+		ON CONFLICT (xors_user_id) DO UPDATE
+		SET email        = EXCLUDED.email,
+		    display_name = EXCLUDED.display_name
+		RETURNING xors_user_id, email, display_name, created_at
+	`;
+	return rowToUser(rows[0]);
 }
 
 async function resolveCurrentUser(headers: Headers): Promise<AppUser | null> {
@@ -96,17 +100,33 @@ export const authContext = new Elysia({ name: "auth-context" }).derive(
 	},
 );
 
-export function listAllUsers(): AppUser[] {
-	return Array.from(usersByXorsId.values());
+// Read views for routes that need to look up other users.
+
+export async function listAllUsers(): Promise<AppUser[]> {
+	const sql = getSql();
+	const rows = await sql<UserRow[]>`
+		SELECT xors_user_id, email, display_name, created_at
+		FROM users
+		ORDER BY created_at DESC
+	`;
+	return rows.map(rowToUser);
 }
 
-export function findUserById(id: string): AppUser | null {
-	for (const user of usersByXorsId.values()) {
-		if (user.id === id) return user;
-	}
-	return null;
+export async function findUserById(xorsUserId: string): Promise<AppUser | null> {
+	const sql = getSql();
+	const rows = await sql<UserRow[]>`
+		SELECT xors_user_id, email, display_name, created_at
+		FROM users WHERE xors_user_id = ${xorsUserId}
+	`;
+	return rows.length ? rowToUser(rows[0]) : null;
 }
 
-export function findUserByEmail(email: string): AppUser | null {
-	return usersByEmail.get(email.toLowerCase()) ?? null;
+export async function findUserByEmail(email: string): Promise<AppUser | null> {
+	const sql = getSql();
+	const rows = await sql<UserRow[]>`
+		SELECT xors_user_id, email, display_name, created_at
+		FROM users WHERE email = ${email.toLowerCase()}
+		LIMIT 1
+	`;
+	return rows.length ? rowToUser(rows[0]) : null;
 }

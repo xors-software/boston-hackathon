@@ -75,7 +75,8 @@ dscribe("integration: real api.xors.xyz round-trip", () => {
 				user: { id: string; email: string; displayName: string | null };
 			};
 			expect(me.user.email).toBe(TEST_EMAIL.toLowerCase());
-			expect(me.user.id).toMatch(/^usr_/);
+			// AppUser.id IS the xors_user_id (uuid-shaped from api.xors.xyz).
+			expect(me.user.id.length).toBeGreaterThan(8);
 
 			// Re-login with same creds (existing-user path).
 			const loginAgain = await app.handle(

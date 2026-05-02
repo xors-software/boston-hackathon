@@ -1,4 +1,5 @@
 import { Elysia, t } from "elysia";
+import { getSql } from "../lib/pg";
 import {
 	authContext,
 	findUserById,
@@ -13,10 +14,26 @@ export interface Message {
 	createdAt: string;
 }
 
-// WARNING: in-memory only — restart loses every message. Swap for a
-// real DB before production. Route shapes are deliberately compatible
-// with a SQL `messages` table keyed by (from_user_id, to_user_id).
-const messages: Message[] = [];
+interface MessageRow {
+	id: string;
+	from_xors_user_id: string;
+	to_xors_user_id: string;
+	content: string;
+	created_at: Date | string;
+}
+
+function rowToMessage(r: MessageRow): Message {
+	return {
+		id: r.id,
+		fromUserId: r.from_xors_user_id,
+		toUserId: r.to_xors_user_id,
+		content: r.content,
+		createdAt:
+			r.created_at instanceof Date
+				? r.created_at.toISOString()
+				: r.created_at,
+	};
+}
 
 function generateMessageId(): string {
 	return `msg_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
@@ -42,15 +59,20 @@ export const messagesRoutes = new Elysia({ prefix: "/messages" })
 	.use(authContext)
 	.get(
 		"/",
-		({ currentUser, set }) => {
+		async ({ currentUser, set }) => {
 			if (!currentUser) {
 				set.status = 401;
 				return { error: "Not authenticated" };
 			}
-			const mine = messages.filter(
-				(m) => m.fromUserId === currentUser.id || m.toUserId === currentUser.id,
-			);
-			return { messages: mine };
+			const sql = getSql();
+			const rows = await sql<MessageRow[]>`
+				SELECT id, from_xors_user_id, to_xors_user_id, content, created_at
+				FROM messages
+				WHERE from_xors_user_id = ${currentUser.id}
+				   OR to_xors_user_id   = ${currentUser.id}
+				ORDER BY created_at ASC
+			`;
+			return { messages: rows.map(rowToMessage) };
 		},
 		{
 			response: {
@@ -62,28 +84,31 @@ export const messagesRoutes = new Elysia({ prefix: "/messages" })
 	)
 	.get(
 		"/with/:userId",
-		({ currentUser, params: { userId }, set }) => {
+		async ({ currentUser, params: { userId }, set }) => {
 			if (!currentUser) {
 				set.status = 401;
 				return { error: "Not authenticated" };
 			}
-			const other = findUserById(userId);
+			const other = await findUserById(userId);
 			if (!other) {
 				set.status = 404;
 				return { error: "User not found" };
 			}
-			const thread = messages.filter(
-				(m) =>
-					(m.fromUserId === currentUser.id && m.toUserId === other.id) ||
-					(m.fromUserId === other.id && m.toUserId === currentUser.id),
-			);
+			const sql = getSql();
+			const rows = await sql<MessageRow[]>`
+				SELECT id, from_xors_user_id, to_xors_user_id, content, created_at
+				FROM messages
+				WHERE (from_xors_user_id = ${currentUser.id} AND to_xors_user_id = ${other.id})
+				   OR (from_xors_user_id = ${other.id}        AND to_xors_user_id = ${currentUser.id})
+				ORDER BY created_at ASC
+			`;
 			return {
 				with: {
 					id: other.id,
 					email: other.email,
 					displayName: other.displayName,
 				},
-				messages: thread,
+				messages: rows.map(rowToMessage),
 			};
 		},
 		{
@@ -104,12 +129,12 @@ export const messagesRoutes = new Elysia({ prefix: "/messages" })
 	)
 	.post(
 		"/",
-		({ currentUser, body, set }) => {
+		async ({ currentUser, body, set }) => {
 			if (!currentUser) {
 				set.status = 401;
 				return { error: "Not authenticated" };
 			}
-			const recipient = findUserById(body.toUserId);
+			const recipient = await findUserById(body.toUserId);
 			if (!recipient) {
 				set.status = 404;
 				return { error: "Recipient not found" };
@@ -118,15 +143,14 @@ export const messagesRoutes = new Elysia({ prefix: "/messages" })
 				set.status = 400;
 				return { error: "Cannot send a message to yourself" };
 			}
-			const message: Message = {
-				id: generateMessageId(),
-				fromUserId: currentUser.id,
-				toUserId: recipient.id,
-				content: body.content,
-				createdAt: new Date().toISOString(),
-			};
-			messages.push(message);
-			return { message };
+			const sql = getSql();
+			const id = generateMessageId();
+			const rows = await sql<MessageRow[]>`
+				INSERT INTO messages (id, from_xors_user_id, to_xors_user_id, content)
+				VALUES (${id}, ${currentUser.id}, ${recipient.id}, ${body.content})
+				RETURNING id, from_xors_user_id, to_xors_user_id, content, created_at
+			`;
+			return { message: rowToMessage(rows[0]) };
 		},
 		{
 			body: t.Object({
@@ -144,12 +168,12 @@ export const messagesRoutes = new Elysia({ prefix: "/messages" })
 	)
 	.get(
 		"/recipients",
-		({ currentUser, set }) => {
+		async ({ currentUser, set }) => {
 			if (!currentUser) {
 				set.status = 401;
 				return { error: "Not authenticated" };
 			}
-			const others = listAllUsers()
+			const others = (await listAllUsers())
 				.filter((u) => u.id !== currentUser.id)
 				.map((u) => ({
 					id: u.id,
