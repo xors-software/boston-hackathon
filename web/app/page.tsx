@@ -1,12 +1,13 @@
 "use client"
 
-import { AuthStatus, Button, Text } from "@/components"
+import { AuthStatus, Button, SignedInToast, Text } from "@/components"
 import { Check, Home as HomeIcon, Warning, WifiOff } from "@/components/icons/generated"
 import { toast } from "sonner"
 
 export default function Home() {
 	return (
 		<main className="min-h-dvh bg-background">
+			<SignedInToast />
 			{/* Header */}
 			<header className="border-b border-border">
 				<div className="container mx-auto px-6 py-4 flex items-center justify-between">
