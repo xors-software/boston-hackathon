@@ -10,6 +10,7 @@ import {
 	listGiftsForUser,
 	listPeople,
 	listQuestions,
+	listResponses,
 	patchGift,
 	patchPerson,
 	patchQuestion,
@@ -25,6 +26,7 @@ import {
 	loadGift,
 	questionSchema,
 	requireUser,
+	responseSchema,
 } from "../lib/route-helpers";
 import { authContext } from "../lib/xors-identity";
 
@@ -132,12 +134,13 @@ export const giftsRoutes = new Elysia({ prefix: "/gifts" })
 			const result = await loadGift(ctx);
 			if (isFail(result)) return { error: result.error };
 			const { gift } = result;
-			const [people, questions, recipient] = await Promise.all([
+			const [people, questions, recipient, responses] = await Promise.all([
 				listPeople(gift.id),
 				listQuestions(gift.id),
 				getRecipientForGift(gift.id),
+				listResponses(gift.id),
 			]);
-			return { gift, people, questions, recipient };
+			return { gift, people, questions, recipient, responses };
 		},
 		{
 			params: t.Object({ id: t.String() }),
@@ -147,6 +150,7 @@ export const giftsRoutes = new Elysia({ prefix: "/gifts" })
 					people: t.Array(personSchema),
 					questions: t.Array(questionSchema),
 					recipient: t.Union([recipientSchema, t.Null()]),
+					responses: t.Array(responseSchema),
 				}),
 				401: errorSchema,
 				404: errorSchema,
