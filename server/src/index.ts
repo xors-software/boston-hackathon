@@ -2,8 +2,11 @@ import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
 import { Elysia } from "elysia";
 import { authRoutes } from "./routes/auth";
+import { giftsRoutes } from "./routes/gifts";
 import { healthRoutes } from "./routes/health";
 import { messagesRoutes } from "./routes/messages";
+import { recipientRoutes } from "./routes/recipient";
+import { transcribeRoutes } from "./routes/transcribe";
 import { usersRoutes } from "./routes/users";
 
 // Loud boot log: missing API_AES_KEY/API_IV_KEY breaks /oauth decrypt,
@@ -44,6 +47,9 @@ const app = new Elysia()
 	.use(authRoutes)
 	.use(usersRoutes)
 	.use(messagesRoutes)
+	.use(transcribeRoutes)
+	.use(giftsRoutes)
+	.use(recipientRoutes)
 	.listen(process.env.PORT || 3001);
 
 console.log(
