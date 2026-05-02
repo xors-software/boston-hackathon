@@ -4,6 +4,27 @@ import { authContext, XORS_SESSION_COOKIE } from "../lib/xors-identity";
 const COOKIE_SECURE =
 	(process.env.SESSION_COOKIE_SECURE ?? "true").toLowerCase() !== "false";
 const COOKIE_SAMESITE = process.env.SESSION_COOKIE_SAMESITE || "Lax";
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days, matches /oauth callback
+
+const XORS_API_URL =
+	process.env.XORS_API_URL ||
+	process.env.NEXT_PUBLIC_XORS_API_URL ||
+	"https://api.xors.xyz";
+
+const XORS_AUTH_SOURCE =
+	process.env.XORS_AUTH_SOURCE || "boston-hackathon.local";
+
+function buildXorsCookie(sessionKey: string): string {
+	const parts = [
+		`${XORS_SESSION_COOKIE}=${sessionKey}`,
+		"HttpOnly",
+		"Path=/",
+		`Max-Age=${COOKIE_MAX_AGE}`,
+		`SameSite=${COOKIE_SAMESITE}`,
+	];
+	if (COOKIE_SECURE) parts.push("Secure");
+	return parts.join("; ");
+}
 
 function clearXorsCookie(): string {
 	const parts = [
@@ -15,6 +36,32 @@ function clearXorsCookie(): string {
 	];
 	if (COOKIE_SECURE) parts.push("Secure");
 	return parts.join("; ");
+}
+
+// Proxies to api.xors.xyz/api/users/authenticate. The xors endpoint
+// auto-creates accounts on unseen emails — so this serves as both
+// sign-in and sign-up. Returns the session key on success, null on any
+// failure (network, bad creds).
+async function authenticateWithXors(
+	email: string,
+	password: string,
+): Promise<string | null> {
+	try {
+		const res = await fetch(`${XORS_API_URL}/api/users/authenticate`, {
+			method: "POST",
+			headers: { Accept: "application/json", "Content-Type": "application/json" },
+			body: JSON.stringify({ email, password, source: XORS_AUTH_SOURCE }),
+		});
+		if (!res.ok) return null;
+		const body = (await res.json()) as { user?: { key?: string } };
+		return body.user?.key ?? null;
+	} catch (err) {
+		console.error(
+			"[auth] xors authenticate failed:",
+			err instanceof Error ? err.message : err,
+		);
+		return null;
+	}
 }
 
 const userSchema = t.Object({
@@ -46,6 +93,32 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 				401: t.Object({ error: t.String() }),
 			},
 			detail: { summary: "Get current user", tags: ["Auth"] },
+		},
+	)
+	.post(
+		"/login",
+		async ({ body, set }) => {
+			const sessionKey = await authenticateWithXors(body.email, body.password);
+			if (!sessionKey) {
+				set.status = 401;
+				return { error: "Wrong email or password." };
+			}
+			set.headers["set-cookie"] = buildXorsCookie(sessionKey);
+			return { ok: true as const };
+		},
+		{
+			body: t.Object({
+				email: t.String({ minLength: 3, maxLength: 256 }),
+				password: t.String({ minLength: 1, maxLength: 256 }),
+			}),
+			response: {
+				200: t.Object({ ok: t.Literal(true) }),
+				401: t.Object({ error: t.String() }),
+			},
+			detail: {
+				summary: "Sign in with email + password via api.xors.xyz",
+				tags: ["Auth"],
+			},
 		},
 	)
 	.post(
