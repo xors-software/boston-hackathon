@@ -12,10 +12,16 @@ type CustomQuestion = {
 	preface?: string
 }
 
+type AiQuestion = {
+	id: string
+	text: string
+}
+
 type QuestionsState = {
 	selectedIds: string[]
 	custom: CustomQuestion[]
 	edits?: Record<string, string>
+	ai?: AiQuestion[]
 }
 
 const LIBRARY_MAP = new Map(QUESTION_LIBRARY.map((q) => [q.id, q]))
@@ -26,6 +32,7 @@ export default function ReviewQuestionsPage() {
 
 	const [selectedIds, setSelectedIds] = useState<string[]>([])
 	const [custom, setCustom] = useState<CustomQuestion[]>([])
+	const [ai, setAi] = useState<AiQuestion[]>([])
 	const [edits, setEdits] = useState<Record<string, string>>({})
 	const [editingId, setEditingId] = useState<string | null>(null)
 	const [draftText, setDraftText] = useState("")
@@ -35,6 +42,7 @@ export default function ReviewQuestionsPage() {
 		const saved = state.data.questions as QuestionsState | undefined
 		if (saved?.selectedIds) setSelectedIds(saved.selectedIds)
 		if (saved?.custom) setCustom(saved.custom)
+		if (saved?.ai) setAi(saved.ai)
 		if (saved?.edits) setEdits(saved.edits)
 	}, [hydrated, state.data.questions])
 
@@ -43,26 +51,33 @@ export default function ReviewQuestionsPage() {
 		[custom],
 	)
 
+	const aiMap = useMemo(() => new Map(ai.map((q) => [q.id, q])), [ai])
+
 	const persist = (next: Partial<QuestionsState>) => {
 		const merged: QuestionsState = {
 			selectedIds: next.selectedIds ?? selectedIds,
 			custom: next.custom ?? custom,
 			edits: next.edits ?? edits,
+			ai: next.ai ?? ai,
 		}
 		if (next.selectedIds) setSelectedIds(next.selectedIds)
 		if (next.custom) setCustom(next.custom)
+		if (next.ai) setAi(next.ai)
 		if (next.edits) setEdits(next.edits)
 		update({ data: { questions: merged } })
 	}
 
 	const getQuestion = (id: string) => {
 		const customQ = customMap.get(id)
+		const aiQ = aiMap.get(id)
 		const libQ = LIBRARY_MAP.get(id)
-		const baseText = customQ?.text ?? libQ?.text ?? "(missing question)"
+		const baseText =
+			customQ?.text ?? aiQ?.text ?? libQ?.text ?? "(missing question)"
 		return {
 			id,
 			text: edits[id] ?? baseText,
 			isCustom: Boolean(customQ),
+			isAi: Boolean(aiQ),
 			photoUrl: customQ?.photoUrl,
 		}
 	}
@@ -74,10 +89,12 @@ export default function ReviewQuestionsPage() {
 		const nextEdits = { ...edits }
 		delete nextEdits[id]
 		const nextCustom = custom.filter((c) => c.id !== id)
+		const nextAi = ai.filter((q) => q.id !== id)
 		persist({
 			selectedIds: nextSelected,
 			edits: nextEdits,
 			custom: nextCustom,
+			ai: nextAi,
 		})
 		if (editingId === id) {
 			setEditingId(null)

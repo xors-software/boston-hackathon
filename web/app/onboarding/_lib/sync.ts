@@ -51,10 +51,15 @@ type FrontCustomQuestion = {
 	serverId?: string
 	photoUrl?: string
 }
+type FrontAiQuestion = {
+	id: string
+	text: string
+}
 type FrontQuestionsState = {
 	selectedIds: string[]
 	custom: FrontCustomQuestion[]
 	edits?: Record<string, string>
+	ai?: FrontAiQuestion[]
 }
 
 const VALID_INTENTS: ReadonlySet<GiftIntent> = new Set([
@@ -136,8 +141,10 @@ async function syncQuestions(
 	}
 
 	const customById = new Map(qs.custom.map((c) => [c.id, c]))
+	const aiById = new Map((qs.ai ?? []).map((a) => [a.id, a]))
 	for (const id of qs.selectedIds) {
 		const custom = customById.get(id)
+		const ai = aiById.get(id)
 		if (custom) {
 			// Photos were uploaded directly from the write page; we forward
 			// the resulting URL on re-create so the photo survives the
@@ -148,6 +155,14 @@ async function syncQuestions(
 					text: custom.text,
 					preface: custom.preface ?? null,
 					photoUrl: custom.photoUrl ?? null,
+				}),
+			)
+		} else if (ai) {
+			const editedText = qs.edits?.[id] ?? ai.text
+			await unwrap(
+				api.gifts({ id: giftId }).questions.post({
+					source: "ai",
+					text: editedText,
 				}),
 			)
 		} else {

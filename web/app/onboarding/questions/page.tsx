@@ -1,7 +1,9 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { ApiError, api, unwrap } from "@/lib/api"
+import { getStoredGiftId } from "../_lib/sync"
 import { useOnboardingState } from "../_lib/state"
 import {
 	CATEGORY_TABS,
@@ -19,7 +21,7 @@ const RECIPIENT_PHRASE: Record<string, string> = {
 	undecided: "the person you're thinking of",
 }
 
-type CategoryFilter = "suggested" | QuestionCategory
+type CategoryFilter = "suggested" | "personalized" | QuestionCategory
 
 type CustomQuestion = {
 	id: string
@@ -28,12 +30,28 @@ type CustomQuestion = {
 	preface?: string
 }
 
+type AiQuestion = {
+	id: string
+	text: string
+}
+
 type QuestionsState = {
 	selectedIds: string[]
 	custom: CustomQuestion[]
+	ai?: AiQuestion[]
 }
 
 const SUGGESTED_COUNT = QUESTION_LIBRARY.filter((q) => q.suggested).length
+
+const PERSONALIZED_TAB = { id: "personalized" as const, label: "Personalized" }
+
+const TAB_ORDER = [
+	CATEGORY_TABS[0], // Suggested
+	PERSONALIZED_TAB,
+	...CATEGORY_TABS.slice(1),
+]
+
+type FetchState = "idle" | "loading" | "ready" | "empty" | "auth" | "error"
 
 export default function QuestionsPage() {
 	const router = useRouter()
@@ -46,13 +64,54 @@ export default function QuestionsPage() {
 	const [search, setSearch] = useState("")
 	const [selectedIds, setSelectedIds] = useState<string[]>([])
 	const [custom, setCustom] = useState<CustomQuestion[]>([])
+	const [aiPicks, setAiPicks] = useState<AiQuestion[]>([])
+	const [aiSuggestions, setAiSuggestions] = useState<AiQuestion[]>([])
+	const [aiState, setAiState] = useState<FetchState>("idle")
+	const [aiErrorMsg, setAiErrorMsg] = useState<string | null>(null)
 
 	useEffect(() => {
 		if (!hydrated) return
 		const saved = state.data.questions as QuestionsState | undefined
 		if (saved?.selectedIds) setSelectedIds(saved.selectedIds)
 		if (saved?.custom) setCustom(saved.custom)
+		if (saved?.ai) setAiPicks(saved.ai)
 	}, [hydrated, state.data.questions])
+
+	const fetchSuggestions = useCallback(async () => {
+		const giftId = getStoredGiftId()
+		if (!giftId) {
+			setAiState("auth")
+			return
+		}
+		setAiState("loading")
+		setAiErrorMsg(null)
+		try {
+			const result = await unwrap(
+				api
+					.gifts({ id: giftId })
+					["suggest-questions"]
+					.post(),
+			)
+			const list = result.suggestions ?? []
+			setAiSuggestions(list)
+			setAiState(list.length === 0 ? "empty" : "ready")
+		} catch (err) {
+			if (err instanceof ApiError && err.status === 401) {
+				setAiState("auth")
+			} else {
+				setAiState("error")
+				setAiErrorMsg(
+					err instanceof Error ? err.message : "Couldn't load suggestions",
+				)
+			}
+		}
+	}, [])
+
+	useEffect(() => {
+		if (filter !== "personalized") return
+		if (aiState !== "idle") return
+		void fetchSuggestions()
+	}, [filter, aiState, fetchSuggestions])
 
 	const allQuestions = useMemo<LibraryQuestion[]>(() => {
 		const customAsLibrary: LibraryQuestion[] = custom.map((c) => ({
@@ -64,10 +123,32 @@ export default function QuestionsPage() {
 		return [...customAsLibrary, ...QUESTION_LIBRARY]
 	}, [custom])
 
+	const aiPickedById = useMemo(
+		() => new Map(aiPicks.map((q) => [q.id, q])),
+		[aiPicks],
+	)
+
+	const aiVisible = useMemo<LibraryQuestion[]>(() => {
+		const merged = new Map<string, AiQuestion>()
+		for (const q of aiPicks) merged.set(q.id, q)
+		for (const q of aiSuggestions) if (!merged.has(q.id)) merged.set(q.id, q)
+		return Array.from(merged.values()).map((q) => ({
+			id: q.id,
+			text: q.text,
+			categories: [],
+			suggested: true,
+		}))
+	}, [aiPicks, aiSuggestions])
+
 	const visibleQuestions = useMemo(() => {
 		const q = search.trim().toLowerCase()
 		if (q) {
-			return allQuestions.filter((item) => item.text.toLowerCase().includes(q))
+			return [...aiVisible, ...allQuestions].filter((item) =>
+				item.text.toLowerCase().includes(q),
+			)
+		}
+		if (filter === "personalized") {
+			return aiVisible
 		}
 		if (filter === "suggested") {
 			return allQuestions.filter((item) => item.suggested)
@@ -75,20 +156,37 @@ export default function QuestionsPage() {
 		return allQuestions.filter((item) =>
 			item.categories.includes(filter as QuestionCategory),
 		)
-	}, [allQuestions, filter, search])
+	}, [allQuestions, aiVisible, filter, search])
 
-	const persistSelected = (next: string[]) => {
-		setSelectedIds(next)
-		update({
-			data: { questions: { selectedIds: next, custom } satisfies QuestionsState },
-		})
+	const persistAll = (next: {
+		selectedIds?: string[]
+		ai?: AiQuestion[]
+	}) => {
+		const merged: QuestionsState = {
+			selectedIds: next.selectedIds ?? selectedIds,
+			custom,
+			ai: next.ai ?? aiPicks,
+		}
+		if (next.selectedIds) setSelectedIds(next.selectedIds)
+		if (next.ai) setAiPicks(next.ai)
+		update({ data: { questions: merged } })
 	}
 
 	const toggle = (id: string) => {
-		const next = selectedIds.includes(id)
+		const isSelected = selectedIds.includes(id)
+		const nextSelected = isSelected
 			? selectedIds.filter((x) => x !== id)
 			: [...selectedIds, id]
-		persistSelected(next)
+
+		const fromSuggestions = aiSuggestions.find((q) => q.id === id)
+		const fromPicks = aiPickedById.get(id)
+		let nextAi: AiQuestion[] | undefined
+		if (isSelected && fromPicks) {
+			nextAi = aiPicks.filter((q) => q.id !== id)
+		} else if (!isSelected && fromSuggestions && !fromPicks) {
+			nextAi = [...aiPicks, fromSuggestions]
+		}
+		persistAll({ selectedIds: nextSelected, ai: nextAi })
 	}
 
 	const goReview = () => {
@@ -142,9 +240,12 @@ export default function QuestionsPage() {
 
 				<div className="mt-4 -mx-6 sm:-mx-8 px-6 sm:px-8 overflow-x-auto no-scrollbar">
 					<div className="flex flex-wrap gap-2">
-						{CATEGORY_TABS.map((tab) => {
+						{TAB_ORDER.map((tab) => {
 							const isActive = filter === tab.id && !search
-							const count = tab.id === "suggested" ? SUGGESTED_COUNT + custom.length : null
+							let count: number | null = null
+							if (tab.id === "suggested") count = SUGGESTED_COUNT + custom.length
+							else if (tab.id === "personalized" && aiState === "ready")
+								count = aiVisible.length
 							return (
 								<button
 									key={tab.id}
@@ -172,6 +273,16 @@ export default function QuestionsPage() {
 						})}
 					</div>
 				</div>
+
+				{filter === "personalized" && !search && (
+					<PersonalizedStatus
+						state={aiState}
+						errorMsg={aiErrorMsg}
+						onRetry={() => {
+							setAiState("idle")
+						}}
+					/>
+				)}
 
 				<div className="mt-5 flex flex-col gap-2">
 					{visibleQuestions.map((q) => {
@@ -267,4 +378,51 @@ export default function QuestionsPage() {
 			</div>
 		</main>
 	)
+}
+
+function PersonalizedStatus({
+	state,
+	errorMsg,
+	onRetry,
+}: {
+	state: FetchState
+	errorMsg: string | null
+	onRetry: () => void
+}) {
+	if (state === "loading") {
+		return (
+			<p className="mt-4 px-1 text-sm text-neutral-500">
+				Reading what you shared and writing a few suggestions...
+			</p>
+		)
+	}
+	if (state === "auth") {
+		return (
+			<p className="mt-4 px-1 text-sm text-neutral-500">
+				Sign in earlier in the flow to get personalized questions here.
+			</p>
+		)
+	}
+	if (state === "empty") {
+		return (
+			<p className="mt-4 px-1 text-sm text-neutral-500">
+				Nothing yet — try filling out the About and Why steps first.
+			</p>
+		)
+	}
+	if (state === "error") {
+		return (
+			<div className="mt-4 px-1 text-sm text-neutral-500">
+				<span>{errorMsg ?? "Couldn't load suggestions."} </span>
+				<button
+					type="button"
+					onClick={onRetry}
+					className="underline underline-offset-2 text-neutral-700 hover:text-neutral-900"
+				>
+					Try again
+				</button>
+			</div>
+		)
+	}
+	return null
 }

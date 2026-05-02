@@ -1,6 +1,10 @@
 import { Elysia, t } from "elysia";
 import { sendInvitation } from "../lib/email";
 import {
+	suggestQuestionsForGift,
+	SuggestQuestionsError,
+} from "../lib/ai-suggest-questions";
+import {
 	addPerson,
 	addQuestion,
 	createGift,
@@ -382,6 +386,14 @@ export const giftsRoutes = new Elysia({ prefix: "/gifts" })
 				});
 				return { question: q };
 			}
+			if (ctx.body.source === "ai") {
+				const q = await addQuestion(gift.id, {
+					source: "ai",
+					text: ctx.body.text,
+					preface: ctx.body.preface,
+				});
+				return { question: q };
+			}
 			const q = await addQuestion(gift.id, {
 				source: "custom",
 				text: ctx.body.text,
@@ -403,6 +415,11 @@ export const giftsRoutes = new Elysia({ prefix: "/gifts" })
 					text: t.String({ minLength: 1, maxLength: 1000 }),
 					preface: t.Optional(t.Union([t.String({ maxLength: 500 }), t.Null()])),
 					photoUrl: t.Optional(t.Union([t.String({ maxLength: 2048 }), t.Null()])),
+				}),
+				t.Object({
+					source: t.Literal("ai"),
+					text: t.String({ minLength: 1, maxLength: 1000 }),
+					preface: t.Optional(t.Union([t.String({ maxLength: 500 }), t.Null()])),
 				}),
 			]),
 			response: {
@@ -537,6 +554,49 @@ export const giftsRoutes = new Elysia({ prefix: "/gifts" })
 				404: errorSchema,
 			},
 			detail: { summary: "Remove a question's photo", tags: ["Questions"] },
+		},
+	)
+	.post(
+		"/:id/suggest-questions",
+		async (ctx) => {
+			const result = await loadGift(ctx);
+			if (isFail(result)) return { error: result.error };
+			const { gift } = result;
+			const people = await listPeople(gift.id);
+			try {
+				const suggestions = await suggestQuestionsForGift(gift, people);
+				return { suggestions };
+			} catch (err) {
+				if (err instanceof SuggestQuestionsError) {
+					ctx.set.status = err.status;
+					return { error: err.message };
+				}
+				console.error("suggest-questions failed:", err);
+				ctx.set.status = 500;
+				return { error: "Suggestion failed" };
+			}
+		},
+		{
+			params: t.Object({ id: t.String() }),
+			response: {
+				200: t.Object({
+					suggestions: t.Array(
+						t.Object({
+							id: t.String(),
+							text: t.String(),
+							source: t.Literal("ai"),
+						}),
+					),
+				}),
+				401: errorSchema,
+				404: errorSchema,
+				500: errorSchema,
+				502: errorSchema,
+			},
+			detail: {
+				summary: "Suggest 6–10 personalized questions for a gift (AI)",
+				tags: ["Questions"],
+			},
 		},
 	)
 	.post(

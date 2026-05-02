@@ -445,9 +445,15 @@ export interface AddCustomQuestion {
 	photoUrl?: string | null;
 }
 
+export interface AddAiQuestion {
+	source: "ai";
+	text: string;
+	preface?: string | null;
+}
+
 export async function addQuestion(
 	giftId: string,
-	input: AddLibraryQuestion | AddCustomQuestion,
+	input: AddLibraryQuestion | AddCustomQuestion | AddAiQuestion,
 ): Promise<Question> {
 	if (input.source === "library") {
 		const existing = await findLibraryQuestion(giftId, input.templateId);
@@ -460,23 +466,28 @@ export async function addQuestion(
 		text: input.text,
 		position,
 	};
-	const [row] = await db
-		.insert(questionsTable)
-		.values(
-			input.source === "library"
-				? {
-						...baseValues,
-						source: "library" as const,
-						templateId: input.templateId,
-					}
-				: {
-						...baseValues,
-						source: "custom" as const,
-						preface: input.preface ?? null,
-						photoUrl: input.photoUrl ?? null,
-					},
-		)
-		.returning();
+	let values: typeof questionsTable.$inferInsert;
+	if (input.source === "library") {
+		values = {
+			...baseValues,
+			source: "library" as const,
+			templateId: input.templateId,
+		};
+	} else if (input.source === "ai") {
+		values = {
+			...baseValues,
+			source: "ai" as const,
+			preface: input.preface ?? null,
+		};
+	} else {
+		values = {
+			...baseValues,
+			source: "custom" as const,
+			preface: input.preface ?? null,
+			photoUrl: input.photoUrl ?? null,
+		};
+	}
+	const [row] = await db.insert(questionsTable).values(values).returning();
 	return rowToQuestion(row);
 }
 
