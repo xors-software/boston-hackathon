@@ -1,4 +1,5 @@
 import { Elysia, t } from "elysia";
+import { sendInvitation } from "../lib/email";
 import {
 	addPerson,
 	addQuestion,
@@ -29,7 +30,7 @@ import {
 	responseSchema,
 } from "../lib/route-helpers";
 import { bucketFor, getStorage, keyFor } from "../lib/storage";
-import { authContext } from "../lib/xors-identity";
+import { type AppUser, authContext } from "../lib/xors-identity";
 
 // Cap matches recipient photo route. Bigger than 10MB usually means a misclick;
 // fail fast rather than burn bandwidth + bucket on something we'd reject anyway.
@@ -545,6 +546,14 @@ export const giftsRoutes = new Elysia({ prefix: "/gifts" })
 			if (isFail(user)) return { error: user.error };
 			try {
 				const result = await sendGift(ctx.params.id, user.id);
+				// Fire the invitation on every successful send (including the
+				// `alreadySent` retry path) — gives the giver a way to retry
+				// delivery by re-tapping send if the first email failed.
+				// Errors are logged but don't surface; the recipient row is
+				// already persisted, and rolling back would lose the token.
+				if (result.gift.delivery === "email" && result.recipient.email) {
+					await deliverInvitation(user, result);
+				}
 				return result;
 			} catch (err) {
 				if (err instanceof SendValidationError) {
@@ -572,3 +581,33 @@ export const giftsRoutes = new Elysia({ prefix: "/gifts" })
 			detail: { summary: "Send a gift to its recipient", tags: ["Gifts"] },
 		},
 	);
+
+function giverDisplayName(user: AppUser): string {
+	if (user.displayName?.trim()) return user.displayName.trim();
+	const local = user.email.split("@")[0]?.trim();
+	return local || "Someone";
+}
+
+async function deliverInvitation(
+	user: AppUser,
+	result: Awaited<ReturnType<typeof sendGift>>,
+): Promise<void> {
+	const baseUrl = (process.env.TIME_LOCK_BASE_URL ?? "https://ember.app").replace(
+		/\/$/,
+		"",
+	);
+	const link = `${baseUrl}/r/${result.recipient.accessToken}`;
+	try {
+		await sendInvitation({
+			recipientEmail: result.recipient.email,
+			recipientName: result.recipient.name,
+			giverName: giverDisplayName(user),
+			link,
+		});
+	} catch (err) {
+		console.error(
+			`[email] invitation failed for gift=${result.gift.id} recipient=${result.recipient.email}:`,
+			err instanceof Error ? err.message : err,
+		);
+	}
+}
