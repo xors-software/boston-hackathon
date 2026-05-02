@@ -24,11 +24,15 @@ curl -fsS -X PATCH "$BASE/gifts/$GID" -H 'content-type: application/json' \
   -d '{"recipientName":"Test","recipientEmail":"test@example.com"}' \
   | jq '.gift | {recipientName, recipientEmail}'
 
-note "Add a custom question"
+note "Add a custom question (sendGift requires ≥3 questions, top up with library)"
 CUSTOM=$(curl -fsS -X POST "$BASE/gifts/$GID/questions" -H 'content-type: application/json' \
   -d '{"source":"custom","text":"What does this photo bring back?"}')
 QID=$(echo "$CUSTOM" | jq -r .question.id)
 echo "QID=$QID"
+for TPL in ch1 lv1; do
+  curl -fsS -X POST "$BASE/gifts/$GID/questions" -H 'content-type: application/json' \
+    -d "{\"source\":\"library\",\"templateId\":\"$TPL\"}" >/dev/null
+done
 
 note "Upload PNG to giver photo endpoint"
 PHOTO_RES=$(curl -fsS -X POST "$BASE/gifts/$GID/questions/$QID/photo" \

@@ -1,4 +1,7 @@
+import { eq } from "drizzle-orm";
 import { Elysia } from "elysia";
+import { db } from "../db/client";
+import { users } from "../db/schema";
 import { readCookie } from "./cookies";
 
 const XORS_API_URL =
@@ -23,13 +26,6 @@ interface XorsViewer {
 	level?: string | number | null;
 }
 
-const usersByXorsId = new Map<string, AppUser>();
-const usersByEmail = new Map<string, AppUser>();
-
-function generateLocalUserId(): string {
-	return `usr_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
-}
-
 async function fetchXorsViewer(sessionKey: string): Promise<XorsViewer | null> {
 	if (!sessionKey) return null;
 	try {
@@ -51,63 +47,72 @@ async function fetchXorsViewer(sessionKey: string): Promise<XorsViewer | null> {
 	}
 }
 
-function upsertFromViewer(viewer: XorsViewer): AppUser {
+function rowToAppUser(row: typeof users.$inferSelect): AppUser {
+	return {
+		// `id` is kept as a field for callsites (`currentUser.id`) but is
+		// the same value as `xorsUserId` — the existing DB schema keys
+		// users by xors_user_id directly, no separate local surrogate.
+		id: row.xorsUserId,
+		xorsUserId: row.xorsUserId,
+		email: row.email,
+		displayName: row.displayName,
+		createdAt: row.createdAt.toISOString(),
+	};
+}
+
+async function upsertFromViewer(viewer: XorsViewer): Promise<AppUser> {
 	const email = (viewer.email ?? "").toLowerCase();
 	const displayName = viewer.username ?? null;
 
-	const existing = usersByXorsId.get(viewer.id);
+	const [existing] = await db
+		.select()
+		.from(users)
+		.where(eq(users.xorsUserId, viewer.id));
 	if (existing) {
-		if (email && existing.email !== email) {
-			usersByEmail.delete(existing.email);
-			existing.email = email;
-			usersByEmail.set(email, existing);
-		}
-		if (existing.displayName !== displayName) {
-			existing.displayName = displayName;
-		}
-		return existing;
+		const needsUpdate =
+			(email && existing.email !== email) ||
+			existing.displayName !== displayName;
+		if (!needsUpdate) return rowToAppUser(existing);
+		const [updated] = await db
+			.update(users)
+			.set({ email: email || existing.email, displayName })
+			.where(eq(users.xorsUserId, viewer.id))
+			.returning();
+		return rowToAppUser(updated);
 	}
 
-	const fresh: AppUser = {
-		id: generateLocalUserId(),
-		email,
-		displayName,
-		createdAt: new Date().toISOString(),
-		xorsUserId: viewer.id,
-	};
-	usersByXorsId.set(viewer.id, fresh);
-	if (email) usersByEmail.set(email, fresh);
-	return fresh;
+	const [inserted] = await db
+		.insert(users)
+		.values({
+			xorsUserId: viewer.id,
+			email,
+			displayName,
+		})
+		.returning();
+	return rowToAppUser(inserted);
 }
 
-// Test bypass: when TEST_USER_EMAIL is set the server treats every request as
-// authenticated as that synthetic user. Used by /tmp/ember-e2e.sh and local
-// curl-driven flows where standing up real XORS auth is overkill.
-function syntheticTestUser(): AppUser | null {
-	const email = process.env.TEST_USER_EMAIL?.toLowerCase();
+// Local-dev bypass — when TEST_USER_EMAIL is set, requests resolve to
+// a deterministic fake user so e2e tests don't round-trip through
+// Google + api.xors.xyz. Never set this in deployed envs.
+async function maybeTestUser(): Promise<AppUser | null> {
+	const email = process.env.TEST_USER_EMAIL;
 	if (!email) return null;
-	const xorsUserId = `test_${email}`;
-	const existing = usersByXorsId.get(xorsUserId);
-	if (existing) return existing;
-	const fresh: AppUser = {
-		id: generateLocalUserId(),
+	return upsertFromViewer({
+		id: `test-${email}`,
 		email,
-		displayName: null,
-		createdAt: new Date().toISOString(),
-		xorsUserId,
-	};
-	usersByXorsId.set(xorsUserId, fresh);
-	usersByEmail.set(email, fresh);
-	return fresh;
+		username: process.env.TEST_USER_NAME ?? null,
+	});
 }
 
 async function resolveCurrentUser(headers: Headers): Promise<AppUser | null> {
+	const testUser = await maybeTestUser();
+	if (testUser) return testUser;
 	const sessionKey = readCookie(headers, XORS_SESSION_COOKIE);
-	if (sessionKey) {
-		const viewer = await fetchXorsViewer(sessionKey);
-		if (viewer) return upsertFromViewer(viewer);
-	}
-	return syntheticTestUser();
+	if (!sessionKey) return null;
+	const viewer = await fetchXorsViewer(sessionKey);
+	if (!viewer) return null;
+	return upsertFromViewer(viewer);
 }
 
 export const authContext = new Elysia({ name: "auth-context" }).derive(
@@ -118,17 +123,7 @@ export const authContext = new Elysia({ name: "auth-context" }).derive(
 	},
 );
 
-export function listAllUsers(): AppUser[] {
-	return Array.from(usersByXorsId.values());
-}
-
-export function findUserById(id: string): AppUser | null {
-	for (const user of usersByXorsId.values()) {
-		if (user.id === id) return user;
-	}
-	return null;
-}
-
-export function findUserByEmail(email: string): AppUser | null {
-	return usersByEmail.get(email.toLowerCase()) ?? null;
+export async function findUserById(id: string): Promise<AppUser | null> {
+	const [row] = await db.select().from(users).where(eq(users.xorsUserId, id));
+	return row ? rowToAppUser(row) : null;
 }

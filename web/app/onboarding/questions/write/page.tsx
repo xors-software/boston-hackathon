@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { type ChangeEvent, type FormEvent, useEffect, useRef, useState } from "react"
 import { useOnboardingState } from "../../_lib/state"
+import { getStoredGiftId, useEnsureGift } from "../../_lib/sync"
 
 const QUESTION_MAX = 280
 const PHOTO_MAX_BYTES = 10 * 1024 * 1024 // 10MB — matches server cap
@@ -27,30 +28,13 @@ function apiBase(): string {
 	return "http://localhost:3000/api"
 }
 
-// One gift per onboarding session. Created lazily on the first write so the
-// flow doesn't require a separate "start gift" step.
-async function ensureGiftId(
-	state: { data: Record<string, unknown> },
-	persist: (giftId: string) => void,
-): Promise<string> {
-	const existing = state.data.giftId
-	if (typeof existing === "string" && existing) return existing
-	const intent = (state.data.intent as string | undefined) ?? "mom"
-	const res = await fetch(`${apiBase()}/gifts`, {
-		method: "POST",
-		credentials: "include",
-		headers: { "content-type": "application/json" },
-		body: JSON.stringify({ intent }),
-	})
-	if (!res.ok) throw new Error(`Failed to create gift (${res.status})`)
-	const { gift } = (await res.json()) as { gift: { id: string } }
-	persist(gift.id)
-	return gift.id
-}
-
 export default function WriteQuestionPage() {
 	const router = useRouter()
 	const { state, update, hydrated } = useOnboardingState()
+	// useEnsureGift is the single source of truth for gift creation across
+	// onboarding (set up on the account page). We piggy-back on it here so
+	// landing directly on /write still has a giftId to upload against.
+	const { giftId, creating } = useEnsureGift(hydrated ? state : null)
 
 	const [text, setText] = useState("")
 	const [photoFile, setPhotoFile] = useState<File | null>(null)
@@ -62,7 +46,7 @@ export default function WriteQuestionPage() {
 	const fileInputRef = useRef<HTMLInputElement>(null)
 
 	const trimmed = text.trim()
-	const canSave = trimmed.length > 0 && !submitting
+	const canSave = trimmed.length > 0 && !submitting && !creating && Boolean(giftId)
 
 	// Object URL preview only — no base64, no localStorage. The server holds
 	// the canonical image once uploaded; the preview lives just for this view.
@@ -97,11 +81,12 @@ export default function WriteQuestionPage() {
 		setSubmitting(true)
 		setSubmitError(null)
 		try {
-			const giftId = await ensureGiftId(state, (id) =>
-				update({ data: { giftId: id } }),
-			)
+			const id = giftId ?? getStoredGiftId()
+			if (!id) {
+				throw new Error("No gift in progress — finish onboarding setup first.")
+			}
 
-			const createRes = await fetch(`${apiBase()}/gifts/${giftId}/questions`, {
+			const createRes = await fetch(`${apiBase()}/gifts/${id}/questions`, {
 				method: "POST",
 				credentials: "include",
 				headers: { "content-type": "application/json" },
@@ -123,7 +108,7 @@ export default function WriteQuestionPage() {
 				const fd = new FormData()
 				fd.append("photo", photoFile)
 				const photoRes = await fetch(
-					`${apiBase()}/gifts/${giftId}/questions/${question.id}/photo`,
+					`${apiBase()}/gifts/${id}/questions/${question.id}/photo`,
 					{ method: "POST", credentials: "include", body: fd },
 				)
 				if (!photoRes.ok) {

@@ -1,15 +1,14 @@
 import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
 import { Elysia } from "elysia";
-import { runMigrations } from "./db/migrate";
 import { aiRoutes } from "./routes/ai";
 import { authRoutes } from "./routes/auth";
 import { giftsRoutes } from "./routes/gifts";
 import { healthRoutes } from "./routes/health";
 import { messagesRoutes } from "./routes/messages";
+import { questionTemplatesRoutes } from "./routes/question-templates";
 import { recipientRoutes } from "./routes/recipient";
 import { transcribeRoutes } from "./routes/transcribe";
-import { usersRoutes } from "./routes/users";
 
 // Loud boot log: missing API_AES_KEY/API_IV_KEY breaks /oauth decrypt,
 // and a silent failure is hard to diagnose in deploy logs.
@@ -23,17 +22,9 @@ console.log(
 	process.env.API_AES_KEY ? "set" : "MISSING",
 	"API_IV_KEY=",
 	process.env.API_IV_KEY ? "set" : "MISSING",
-	"DATABASE_URL=",
-	process.env.DATABASE_URL ? "set" : "MISSING",
-	"S3_BUCKET=",
-	process.env.S3_BUCKET ?? "MISSING",
-	"TEST_USER_EMAIL=",
-	process.env.TEST_USER_EMAIL ?? "(unset)",
 	"XORS_API_URL=",
 	process.env.XORS_API_URL ?? "(default https://api.xors.xyz)",
 );
-
-await runMigrations();
 
 const app = new Elysia()
 	.use(
@@ -55,10 +46,10 @@ const app = new Elysia()
 	)
 	.use(healthRoutes)
 	.use(authRoutes)
-	.use(usersRoutes)
 	.use(messagesRoutes)
 	.use(transcribeRoutes)
 	.use(aiRoutes)
+	.use(questionTemplatesRoutes)
 	.use(giftsRoutes)
 	.use(recipientRoutes)
 	.listen(process.env.PORT || 3001);

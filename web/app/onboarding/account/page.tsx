@@ -5,24 +5,25 @@ import { useEffect } from "react"
 import { useUser } from "@/hooks/useUser"
 import { buildXorsSignInUrl } from "@/lib/xors"
 import { useOnboardingState } from "../_lib/state"
+import { useEnsureGift } from "../_lib/sync"
 
 export default function AccountPage() {
 	const router = useRouter()
 	const search = useSearchParams()
 	const { state, update, hydrated } = useOnboardingState()
 	const { data: user, isLoading } = useUser()
+	useEnsureGift(hydrated ? state : null)
 
 	const justSignedIn = search.get("signed_in") === "google"
 	const oauthError = search.get("error")
 
 	useEffect(() => {
 		if (!hydrated || !user) return
-		update({ data: { email: user.email } })
 		// If they already sent, skip onboarding entirely
 		if (state.data.sentAt) {
 			router.replace("/dashboard")
 		}
-	}, [hydrated, user, update, state.data.sentAt, router])
+	}, [hydrated, user, state.data.sentAt, router])
 
 	const handleSignIn = () => {
 		window.location.href = buildXorsSignInUrl("/onboarding/account")

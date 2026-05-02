@@ -2,7 +2,9 @@
 
 import { useRouter } from "next/navigation"
 import { type FormEvent, useEffect, useMemo, useState } from "react"
+import { api, ApiError, unwrap } from "@/lib/api"
 import { useOnboardingState } from "../_lib/state"
+import { getStoredGiftId, syncGiftSnapshot } from "../_lib/sync"
 
 const RECIPIENT_DEFAULTS: Record<
 	string,
@@ -39,6 +41,7 @@ export default function SendPage() {
 	const [editingFor, setEditingFor] = useState(false)
 	const [showConfirm, setShowConfirm] = useState(false)
 	const [sending, setSending] = useState(false)
+	const [sendError, setSendError] = useState<string | null>(null)
 
 	useEffect(() => {
 		if (!hydrated) return
@@ -94,18 +97,42 @@ export default function SendPage() {
 	}
 
 	const submitSend = async () => {
+		setSendError(null)
 		setSending(true)
-		// no backend send yet — record local "sent" state and ack
-		const sentAt = new Date().toISOString()
-		update({
-			step: "complete",
-			data: {
-				recipientName,
-				recipientEmail,
-				sentAt,
-			},
-		})
-		router.push("/onboarding/sent")
+		try {
+			const giftId = getStoredGiftId()
+			if (!giftId) {
+				throw new Error("Gift not initialized — sign in again to retry.")
+			}
+			// Snapshot the current local state to the API before sending,
+			// since intermediate steps haven't been syncing incrementally.
+			const snapshotState = {
+				step: "send" as const,
+				data: {
+					...state.data,
+					recipientName,
+					recipientEmail,
+				},
+			}
+			await syncGiftSnapshot(giftId, snapshotState)
+			const result = await unwrap(api.gifts({ id: giftId }).send.post())
+			const sentAt = result.gift.sentAt ?? new Date().toISOString()
+			update({
+				step: "complete",
+				data: {
+					recipientName: result.gift.recipientName,
+					recipientEmail: result.gift.recipientEmail ?? recipientEmail,
+					sentAt,
+					recipientToken: result.recipient.accessToken,
+				},
+			})
+			router.push("/onboarding/sent")
+		} catch (err) {
+			const message =
+				err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Send failed"
+			setSendError(message)
+			setSending(false)
+		}
 	}
 
 	return (
@@ -233,6 +260,12 @@ export default function SendPage() {
 				{needsEmail && !emailValid && (
 					<p className="mt-3 text-sm text-neutral-500">
 						Add {labels.possessive} email above to send.
+					</p>
+				)}
+
+				{sendError && (
+					<p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+						{sendError}
 					</p>
 				)}
 

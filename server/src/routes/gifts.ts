@@ -1,38 +1,88 @@
 import { Elysia, t } from "elysia";
 import {
+	addPerson,
+	addQuestion,
 	createGift,
-	createQuestion,
-	getGift,
-	getQuestion,
-	getRecipientByGift,
-	listGifts,
+	deleteGift,
+	deletePerson,
+	deleteQuestion,
+	getRecipientForGift,
+	listGiftsForUser,
 	listPeople,
 	listQuestions,
-	listResponsesForGift,
+	listResponses,
 	patchGift,
+	patchPerson,
 	patchQuestion,
 	replacePeople,
 	sendGift,
-	setQuestionPhotoUrl,
+	SendValidationError,
+	setQuestionPhoto,
 } from "../lib/gift-store";
-import { getPhotoStorage } from "../lib/photo-storage";
+import { findTemplate } from "../lib/question-templates";
+import {
+	errorSchema,
+	isFail,
+	loadGift,
+	questionSchema,
+	requireUser,
+	responseSchema,
+} from "../lib/route-helpers";
+import { bucketFor, getStorage, keyFor } from "../lib/storage";
 import { authContext } from "../lib/xors-identity";
 
-const errorSchema = t.Object({ error: t.String() });
+// Cap matches recipient photo route. Bigger than 10MB usually means a misclick;
+// fail fast rather than burn bandwidth + bucket on something we'd reject anyway.
+const PHOTO_MAX_BYTES = 10 * 1024 * 1024;
+function extFromImageMime(mime: string): string {
+	if (mime.includes("png")) return "png";
+	if (mime.includes("jpeg") || mime.includes("jpg")) return "jpg";
+	if (mime.includes("webp")) return "webp";
+	if (mime.includes("gif")) return "gif";
+	if (mime.includes("heic")) return "heic";
+	return "bin";
+}
+
+const intentSchema = t.Union([
+	t.Literal("mom"),
+	t.Literal("dad"),
+	t.Literal("loved-one"),
+	t.Literal("undecided"),
+]);
+
+const deliverySchema = t.Union([t.Literal("email"), t.Literal("in-person")]);
+const statusSchema = t.Union([
+	t.Literal("draft"),
+	t.Literal("sent"),
+	t.Literal("archived"),
+]);
+const stepSchema = t.Union([
+	t.Literal("welcome"),
+	t.Literal("intent"),
+	t.Literal("account"),
+	t.Literal("recipient"),
+	t.Literal("why"),
+	t.Literal("world"),
+	t.Literal("questions"),
+	t.Literal("delivery"),
+	t.Literal("send"),
+	t.Literal("complete"),
+]);
 
 const giftSchema = t.Object({
 	id: t.String(),
 	userId: t.String(),
-	intent: t.String(),
-	about: t.Union([t.String(), t.Null()]),
-	why: t.Union([t.String(), t.Null()]),
-	recipientName: t.Union([t.String(), t.Null()]),
+	intent: intentSchema,
+	about: t.String(),
+	why: t.String(),
+	delivery: deliverySchema,
+	recipientName: t.String(),
 	recipientEmail: t.Union([t.String(), t.Null()]),
-	delivery: t.Union([t.String(), t.Null()]),
-	currentStep: t.Union([t.String(), t.Null()]),
-	status: t.Union([t.Literal("draft"), t.Literal("sent")]),
+	currentStep: stepSchema,
+	status: statusSchema,
 	sentAt: t.Union([t.String(), t.Null()]),
 	timeLockAt: t.Union([t.String(), t.Null()]),
+	releasedAt: t.Union([t.String(), t.Null()]),
 	createdAt: t.String(),
 	updatedAt: t.String(),
 });
@@ -41,77 +91,47 @@ const personSchema = t.Object({
 	id: t.String(),
 	giftId: t.String(),
 	name: t.String(),
-	relationship: t.Union([t.String(), t.Null()]),
-	age: t.Union([t.String(), t.Null()]),
-	description: t.Union([t.String(), t.Null()]),
+	relationship: t.String(),
+	age: t.String(),
+	description: t.String(),
 	position: t.Number(),
-	createdAt: t.String(),
-});
-
-const questionSchema = t.Object({
-	id: t.String(),
-	giftId: t.String(),
-	source: t.Union([t.Literal("library"), t.Literal("custom")]),
-	templateId: t.Union([t.String(), t.Null()]),
-	text: t.String(),
-	preface: t.Union([t.String(), t.Null()]),
-	photoUrl: t.Union([t.String(), t.Null()]),
-	position: t.Number(),
-	createdAt: t.String(),
 });
 
 const recipientSchema = t.Object({
 	id: t.String(),
 	giftId: t.String(),
-	name: t.Union([t.String(), t.Null()]),
-	email: t.Union([t.String(), t.Null()]),
 	accessToken: t.String(),
-	createdAt: t.String(),
-});
-
-const responseSchema = t.Object({
-	id: t.String(),
-	questionId: t.String(),
-	recipientId: t.String(),
-	kind: t.Union([t.Literal("text"), t.Literal("audio"), t.Literal("photo")]),
-	text: t.Union([t.String(), t.Null()]),
-	audioUrl: t.Union([t.String(), t.Null()]),
-	photoUrl: t.Union([t.String(), t.Null()]),
-	caption: t.Union([t.String(), t.Null()]),
-	transcript: t.Union([t.String(), t.Null()]),
-	createdAt: t.String(),
+	email: t.String(),
+	name: t.String(),
+	firstSeenAt: t.Union([t.String(), t.Null()]),
+	lastActiveAt: t.Union([t.String(), t.Null()]),
 });
 
 export const giftsRoutes = new Elysia({ prefix: "/gifts" })
 	.use(authContext)
 	.post(
 		"/",
-		async ({ currentUser, body, set }) => {
-			if (!currentUser) {
-				set.status = 401;
-				return { error: "Not authenticated" };
-			}
-			const gift = await createGift(currentUser.xorsUserId, body.intent);
+		async (ctx) => {
+			const user = requireUser(ctx);
+			if (isFail(user)) return { error: user.error };
+			const gift = await createGift(user.id, ctx.body.intent);
 			return { gift };
 		},
 		{
-			body: t.Object({ intent: t.String({ minLength: 1, maxLength: 64 }) }),
+			body: t.Object({ intent: t.Optional(intentSchema) }),
 			response: {
 				200: t.Object({ gift: giftSchema }),
 				401: errorSchema,
 			},
-			detail: { summary: "Create a gift", tags: ["Gifts"] },
+			detail: { summary: "Create a draft gift", tags: ["Gifts"] },
 		},
 	)
 	.get(
 		"/",
-		async ({ currentUser, set }) => {
-			if (!currentUser) {
-				set.status = 401;
-				return { error: "Not authenticated" };
-			}
-			const gifts = await listGifts(currentUser.xorsUserId);
-			return { gifts };
+		async (ctx) => {
+			const user = requireUser(ctx);
+			if (isFail(user)) return { error: user.error };
+			return { gifts: await listGiftsForUser(user.id) };
 		},
 		{
 			response: {
@@ -123,25 +143,20 @@ export const giftsRoutes = new Elysia({ prefix: "/gifts" })
 	)
 	.get(
 		"/:id",
-		async ({ currentUser, params, set }) => {
-			if (!currentUser) {
-				set.status = 401;
-				return { error: "Not authenticated" };
-			}
-			const gift = await getGift(params.id, currentUser.xorsUserId);
-			if (!gift) {
-				set.status = 404;
-				return { error: "Gift not found" };
-			}
+		async (ctx) => {
+			const result = await loadGift(ctx);
+			if (isFail(result)) return { error: result.error };
+			const { gift } = result;
 			const [people, questions, recipient, responses] = await Promise.all([
 				listPeople(gift.id),
 				listQuestions(gift.id),
-				getRecipientByGift(gift.id),
-				listResponsesForGift(gift.id),
+				getRecipientForGift(gift.id),
+				listResponses(gift.id),
 			]);
 			return { gift, people, questions, recipient, responses };
 		},
 		{
+			params: t.Object({ id: t.String() }),
 			response: {
 				200: t.Object({
 					gift: giftSchema,
@@ -153,66 +168,172 @@ export const giftsRoutes = new Elysia({ prefix: "/gifts" })
 				401: errorSchema,
 				404: errorSchema,
 			},
-			detail: { summary: "Get gift with people + questions + responses", tags: ["Gifts"] },
+			detail: { summary: "Get a gift with nested resources", tags: ["Gifts"] },
 		},
 	)
 	.patch(
 		"/:id",
-		async ({ currentUser, params, body, set }) => {
-			if (!currentUser) {
-				set.status = 401;
-				return { error: "Not authenticated" };
-			}
-			const gift = await patchGift(params.id, currentUser.xorsUserId, body);
+		async (ctx) => {
+			const user = requireUser(ctx);
+			if (isFail(user)) return { error: user.error };
+			const gift = await patchGift(ctx.params.id, user.id, ctx.body);
 			if (!gift) {
-				set.status = 404;
+				ctx.set.status = 404;
 				return { error: "Gift not found" };
 			}
 			return { gift };
 		},
 		{
-			body: t.Partial(
-				t.Object({
-					about: t.String({ maxLength: 5000 }),
-					why: t.String({ maxLength: 5000 }),
-					recipientName: t.String({ maxLength: 256 }),
-					recipientEmail: t.String({ maxLength: 256 }),
-					delivery: t.String({ maxLength: 64 }),
-					currentStep: t.String({ maxLength: 64 }),
-					timeLockAt: t.Union([t.String(), t.Null()]),
-				}),
-			),
+			params: t.Object({ id: t.String() }),
+			body: t.Object({
+				intent: t.Optional(intentSchema),
+				about: t.Optional(t.String({ maxLength: 4000 })),
+				why: t.Optional(t.String({ maxLength: 4000 })),
+				delivery: t.Optional(deliverySchema),
+				recipientName: t.Optional(t.String({ maxLength: 200 })),
+				recipientEmail: t.Optional(t.Union([t.String({ maxLength: 320 }), t.Null()])),
+				currentStep: t.Optional(stepSchema),
+				timeLockAt: t.Optional(t.Union([t.String(), t.Null()])),
+			}),
 			response: {
 				200: t.Object({ gift: giftSchema }),
 				401: errorSchema,
 				404: errorSchema,
 			},
-			detail: { summary: "Update gift fields", tags: ["Gifts"] },
+			detail: { summary: "Patch gift fields", tags: ["Gifts"] },
+		},
+	)
+	.delete(
+		"/:id",
+		async (ctx) => {
+			const user = requireUser(ctx);
+			if (isFail(user)) return { error: user.error };
+			const ok = await deleteGift(ctx.params.id, user.id);
+			if (!ok) {
+				ctx.set.status = 404;
+				return { error: "Gift not found" };
+			}
+			return { ok: true as const };
+		},
+		{
+			params: t.Object({ id: t.String() }),
+			response: {
+				200: t.Object({ ok: t.Literal(true) }),
+				401: errorSchema,
+				404: errorSchema,
+			},
+			detail: { summary: "Delete or archive a gift", tags: ["Gifts"] },
+		},
+	)
+	.get(
+		"/:id/people",
+		async (ctx) => {
+			const result = await loadGift(ctx);
+			if (isFail(result)) return { error: result.error };
+			return { people: await listPeople(result.gift.id) };
+		},
+		{
+			params: t.Object({ id: t.String() }),
+			response: {
+				200: t.Object({ people: t.Array(personSchema) }),
+				401: errorSchema,
+				404: errorSchema,
+			},
+			detail: { summary: "List people for a gift", tags: ["People"] },
+		},
+	)
+	.post(
+		"/:id/people",
+		async (ctx) => {
+			const result = await loadGift(ctx);
+			if (isFail(result)) return { error: result.error };
+			const person = await addPerson(result.gift.id, ctx.body);
+			return { person };
+		},
+		{
+			params: t.Object({ id: t.String() }),
+			body: t.Object({
+				name: t.String({ minLength: 1, maxLength: 200 }),
+				relationship: t.String({ minLength: 1, maxLength: 200 }),
+				age: t.String({ maxLength: 60 }),
+				description: t.String({ maxLength: 1000 }),
+			}),
+			response: {
+				200: t.Object({ person: personSchema }),
+				401: errorSchema,
+				404: errorSchema,
+			},
+			detail: { summary: "Add a person", tags: ["People"] },
+		},
+	)
+	.patch(
+		"/:id/people/:pid",
+		async (ctx) => {
+			const result = await loadGift(ctx);
+			if (isFail(result)) return { error: result.error };
+			const person = await patchPerson(result.gift.id, ctx.params.pid, ctx.body);
+			if (!person) {
+				ctx.set.status = 404;
+				return { error: "Person not found" };
+			}
+			return { person };
+		},
+		{
+			params: t.Object({ id: t.String(), pid: t.String() }),
+			body: t.Object({
+				name: t.Optional(t.String({ maxLength: 200 })),
+				relationship: t.Optional(t.String({ maxLength: 200 })),
+				age: t.Optional(t.String({ maxLength: 60 })),
+				description: t.Optional(t.String({ maxLength: 1000 })),
+			}),
+			response: {
+				200: t.Object({ person: personSchema }),
+				401: errorSchema,
+				404: errorSchema,
+			},
+			detail: { summary: "Patch a person", tags: ["People"] },
+		},
+	)
+	.delete(
+		"/:id/people/:pid",
+		async (ctx) => {
+			const result = await loadGift(ctx);
+			if (isFail(result)) return { error: result.error };
+			const ok = await deletePerson(result.gift.id, ctx.params.pid);
+			if (!ok) {
+				ctx.set.status = 404;
+				return { error: "Person not found" };
+			}
+			return { ok: true as const };
+		},
+		{
+			params: t.Object({ id: t.String(), pid: t.String() }),
+			response: {
+				200: t.Object({ ok: t.Literal(true) }),
+				401: errorSchema,
+				404: errorSchema,
+			},
+			detail: { summary: "Delete a person", tags: ["People"] },
 		},
 	)
 	.put(
 		"/:id/people",
-		async ({ currentUser, params, body, set }) => {
-			if (!currentUser) {
-				set.status = 401;
-				return { error: "Not authenticated" };
-			}
-			const gift = await getGift(params.id, currentUser.xorsUserId);
-			if (!gift) {
-				set.status = 404;
-				return { error: "Gift not found" };
-			}
-			const people = await replacePeople(gift.id, body.people);
+		async (ctx) => {
+			const result = await loadGift(ctx);
+			if (isFail(result)) return { error: result.error };
+			const people = await replacePeople(result.gift.id, ctx.body.people);
 			return { people };
 		},
 		{
+			params: t.Object({ id: t.String() }),
 			body: t.Object({
 				people: t.Array(
 					t.Object({
-						name: t.String({ minLength: 1, maxLength: 256 }),
-						relationship: t.Optional(t.String({ maxLength: 256 })),
-						age: t.Optional(t.String({ maxLength: 32 })),
-						description: t.Optional(t.String({ maxLength: 2000 })),
+						id: t.Optional(t.String()),
+						name: t.String({ minLength: 1, maxLength: 200 }),
+						relationship: t.String({ minLength: 1, maxLength: 200 }),
+						age: t.String({ maxLength: 60 }),
+						description: t.String({ maxLength: 1000 }),
 					}),
 				),
 			}),
@@ -221,183 +342,222 @@ export const giftsRoutes = new Elysia({ prefix: "/gifts" })
 				401: errorSchema,
 				404: errorSchema,
 			},
-			detail: { summary: "Replace people list for a gift", tags: ["Gifts"] },
+			detail: { summary: "Replace all people for a gift", tags: ["People"] },
+		},
+	)
+	.get(
+		"/:id/questions",
+		async (ctx) => {
+			const result = await loadGift(ctx);
+			if (isFail(result)) return { error: result.error };
+			return { questions: await listQuestions(result.gift.id) };
+		},
+		{
+			params: t.Object({ id: t.String() }),
+			response: {
+				200: t.Object({ questions: t.Array(questionSchema) }),
+				401: errorSchema,
+				404: errorSchema,
+			},
+			detail: { summary: "List questions for a gift", tags: ["Questions"] },
 		},
 	)
 	.post(
 		"/:id/questions",
-		async ({ currentUser, params, body, set }) => {
-			if (!currentUser) {
-				set.status = 401;
-				return { error: "Not authenticated" };
-			}
-			const gift = await getGift(params.id, currentUser.xorsUserId);
-			if (!gift) {
-				set.status = 404;
-				return { error: "Gift not found" };
-			}
-			let resolvedText: string;
-			if (body.source === "library") {
-				const lib = LIBRARY_BY_ID.get(body.templateId);
-				if (!lib) {
-					set.status = 400;
-					return { error: `Unknown template: ${body.templateId}` };
+		async (ctx) => {
+			const result = await loadGift(ctx);
+			if (isFail(result)) return { error: result.error };
+			const { gift } = result;
+			if (ctx.body.source === "library") {
+				const tpl = findTemplate(ctx.body.templateId);
+				if (!tpl) {
+					ctx.set.status = 404;
+					return { error: "Template not found" };
 				}
-				resolvedText = lib;
-				const question = await createQuestion(gift.id, {
+				const q = await addQuestion(gift.id, {
 					source: "library",
-					templateId: body.templateId,
-					text: resolvedText,
+					templateId: ctx.body.templateId,
+					text: ctx.body.text ?? tpl.text,
 				});
-				return { question };
+				return { question: q };
 			}
-			resolvedText = body.text;
-			const question = await createQuestion(gift.id, {
+			const q = await addQuestion(gift.id, {
 				source: "custom",
-				text: resolvedText,
-				preface: body.preface,
+				text: ctx.body.text,
+				preface: ctx.body.preface,
+				photoUrl: ctx.body.photoUrl,
 			});
-			return { question };
+			return { question: q };
 		},
 		{
+			params: t.Object({ id: t.String() }),
 			body: t.Union([
 				t.Object({
 					source: t.Literal("library"),
-					templateId: t.String({ minLength: 1, maxLength: 64 }),
+					templateId: t.String(),
+					text: t.Optional(t.String({ maxLength: 1000 })),
 				}),
 				t.Object({
 					source: t.Literal("custom"),
 					text: t.String({ minLength: 1, maxLength: 1000 }),
-					preface: t.Optional(t.String({ maxLength: 500 })),
+					preface: t.Optional(t.Union([t.String({ maxLength: 500 }), t.Null()])),
+					photoUrl: t.Optional(t.Union([t.String({ maxLength: 2048 }), t.Null()])),
 				}),
 			]),
 			response: {
 				200: t.Object({ question: questionSchema }),
-				400: errorSchema,
 				401: errorSchema,
 				404: errorSchema,
 			},
-			detail: { summary: "Add a library or custom question", tags: ["Gifts"] },
+			detail: { summary: "Add a question to a gift", tags: ["Questions"] },
 		},
 	)
 	.patch(
 		"/:id/questions/:qid",
-		async ({ currentUser, params, body, set }) => {
-			if (!currentUser) {
-				set.status = 401;
-				return { error: "Not authenticated" };
-			}
-			const gift = await getGift(params.id, currentUser.xorsUserId);
-			if (!gift) {
-				set.status = 404;
-				return { error: "Gift not found" };
-			}
-			const question = await patchQuestion(params.qid, gift.id, body);
-			if (!question) {
-				set.status = 404;
+		async (ctx) => {
+			const result = await loadGift(ctx);
+			if (isFail(result)) return { error: result.error };
+			const q = await patchQuestion(result.gift.id, ctx.params.qid, ctx.body);
+			if (!q) {
+				ctx.set.status = 404;
 				return { error: "Question not found" };
 			}
-			return { question };
+			return { question: q };
 		},
 		{
-			body: t.Partial(
-				t.Object({
-					text: t.String({ minLength: 1, maxLength: 1000 }),
-					preface: t.String({ maxLength: 500 }),
-					position: t.Number(),
-				}),
-			),
+			params: t.Object({ id: t.String(), qid: t.String() }),
+			body: t.Object({
+				text: t.Optional(t.String({ minLength: 1, maxLength: 1000 })),
+				preface: t.Optional(t.Union([t.String({ maxLength: 500 }), t.Null()])),
+				position: t.Optional(t.Number({ minimum: 0 })),
+			}),
 			response: {
 				200: t.Object({ question: questionSchema }),
 				401: errorSchema,
 				404: errorSchema,
 			},
-			detail: { summary: "Update question text/preface/position", tags: ["Gifts"] },
+			detail: { summary: "Patch a question", tags: ["Questions"] },
+		},
+	)
+	.delete(
+		"/:id/questions/:qid",
+		async (ctx) => {
+			const result = await loadGift(ctx);
+			if (isFail(result)) return { error: result.error };
+			const ok = await deleteQuestion(result.gift.id, ctx.params.qid);
+			if (!ok) {
+				ctx.set.status = 404;
+				return { error: "Question not found" };
+			}
+			return { ok: true as const };
+		},
+		{
+			params: t.Object({ id: t.String(), qid: t.String() }),
+			response: {
+				200: t.Object({ ok: t.Literal(true) }),
+				401: errorSchema,
+				404: errorSchema,
+			},
+			detail: { summary: "Delete a question", tags: ["Questions"] },
 		},
 	)
 	.post(
 		"/:id/questions/:qid/photo",
-		async ({ currentUser, params, body, set }) => {
-			if (!currentUser) {
-				set.status = 401;
-				return { error: "Not authenticated" };
-			}
-			const gift = await getGift(params.id, currentUser.xorsUserId);
-			if (!gift) {
-				set.status = 404;
-				return { error: "Gift not found" };
-			}
-			const existing = await getQuestion(params.qid, gift.id);
-			if (!existing) {
-				set.status = 404;
-				return { error: "Question not found" };
-			}
-			const file = body.photo;
-			if (!(file instanceof File)) {
-				set.status = 400;
-				return { error: "Expected multipart 'photo' field with image file" };
+		async (ctx) => {
+			const result = await loadGift(ctx);
+			if (isFail(result)) return { error: result.error };
+			const file = ctx.body.photo as File;
+			if (!file || file.size === 0) {
+				ctx.set.status = 400;
+				return { error: "No photo file provided" };
 			}
 			if (!file.type.startsWith("image/")) {
-				set.status = 400;
+				ctx.set.status = 400;
 				return { error: "Photo must be an image" };
 			}
-			// 10MB cap. Larger uploads usually mean a misclick — fail fast rather
-			// than burn bandwidth and bucket on something we'll reject downstream.
-			if (file.size > 10 * 1024 * 1024) {
-				set.status = 413;
+			if (file.size > PHOTO_MAX_BYTES) {
+				ctx.set.status = 413;
 				return { error: "Photo must be under 10MB" };
 			}
-			const ext = (file.name.split(".").pop() ?? "bin").toLowerCase();
-			const safeExt = /^[a-z0-9]{1,8}$/.test(ext) ? ext : "bin";
-			const key = `q-photos/${gift.id}/${existing.id}.${safeExt}`;
-			const storage = getPhotoStorage();
-			const { url } = await storage.put(key, file);
-			const question = await setQuestionPhotoUrl(existing.id, gift.id, url);
-			if (!question) {
-				set.status = 500;
-				return { error: "Failed to record photo URL" };
+			const ext = extFromImageMime(file.type);
+			const storage = await getStorage();
+			const buf = await file.arrayBuffer();
+			const put = await storage.put({
+				bucket: bucketFor("q-photos"),
+				key: keyFor("q-photos", {
+					giftId: result.gift.id,
+					questionId: ctx.params.qid,
+					ext,
+				}),
+				body: buf,
+				contentType: file.type || "application/octet-stream",
+			});
+			const q = await setQuestionPhoto(
+				result.gift.id,
+				ctx.params.qid,
+				put.url,
+			);
+			if (!q) {
+				ctx.set.status = 404;
+				return { error: "Question not found" };
 			}
-			return { question };
+			return { question: q };
 		},
 		{
-			body: t.Object({ photo: t.File() }),
+			params: t.Object({ id: t.String(), qid: t.String() }),
+			body: t.Object({ photo: t.File({ maxSize: "10m" }) }),
 			response: {
 				200: t.Object({ question: questionSchema }),
 				400: errorSchema,
 				401: errorSchema,
 				404: errorSchema,
 				413: errorSchema,
-				500: errorSchema,
 			},
-			detail: { summary: "Upload custom-question photo to S3", tags: ["Gifts"] },
+			detail: { summary: "Upload a question photo (multipart → S3)", tags: ["Questions"] },
+		},
+	)
+	.delete(
+		"/:id/questions/:qid/photo",
+		async (ctx) => {
+			const result = await loadGift(ctx);
+			if (isFail(result)) return { error: result.error };
+			const q = await setQuestionPhoto(result.gift.id, ctx.params.qid, null);
+			if (!q) {
+				ctx.set.status = 404;
+				return { error: "Question not found" };
+			}
+			return { question: q };
+		},
+		{
+			params: t.Object({ id: t.String(), qid: t.String() }),
+			response: {
+				200: t.Object({ question: questionSchema }),
+				401: errorSchema,
+				404: errorSchema,
+			},
+			detail: { summary: "Remove a question's photo", tags: ["Questions"] },
 		},
 	)
 	.post(
 		"/:id/send",
-		async ({ currentUser, params, set }) => {
-			if (!currentUser) {
-				set.status = 401;
-				return { error: "Not authenticated" };
-			}
-			const result = await sendGift(params.id, currentUser.xorsUserId);
-			if ("error" in result) {
-				if (result.error === "not_found") {
-					set.status = 404;
-					return { error: "Gift not found" };
+		async (ctx) => {
+			const user = requireUser(ctx);
+			if (isFail(user)) return { error: user.error };
+			try {
+				const result = await sendGift(ctx.params.id, user.id);
+				return result;
+			} catch (err) {
+				if (err instanceof SendValidationError) {
+					ctx.set.status = err.field === "gift" ? 404 : 400;
+					return { error: err.message };
 				}
-				if (result.error === "missing_recipient") {
-					set.status = 400;
-					return { error: "Recipient name + email required before sending" };
-				}
+				console.error("send gift failed:", err);
+				ctx.set.status = 500;
+				return { error: "Send failed" };
 			}
-			const sent = result as Exclude<typeof result, { error: string }>;
-			return {
-				gift: sent.gift,
-				recipient: sent.recipient,
-				alreadySent: sent.alreadySent,
-			};
 		},
 		{
+			params: t.Object({ id: t.String() }),
 			response: {
 				200: t.Object({
 					gift: giftSchema,
@@ -407,39 +567,8 @@ export const giftsRoutes = new Elysia({ prefix: "/gifts" })
 				400: errorSchema,
 				401: errorSchema,
 				404: errorSchema,
+				500: errorSchema,
 			},
-			detail: { summary: "Send gift — creates recipient + token", tags: ["Gifts"] },
+			detail: { summary: "Send a gift to its recipient", tags: ["Gifts"] },
 		},
 	);
-
-// Library ID → text. Mirrors web/app/onboarding/questions/_lib/library.ts.
-// Kept in sync manually (small, rarely changes); break this out into a
-// shared package the day it bites.
-const LIBRARY_BY_ID = new Map<string, string>([
-	["ch1", "Tell me about the day I was born."],
-	["ch2", "What's a memory of me as a kid that still makes you laugh?"],
-	["ch3", "What did you wish you'd known before you became a parent?"],
-	["ch4", "What was I like at three?"],
-	["ch5", "What was your first house like?"],
-	["ch6", "What did you used to do on Sundays when you were small?"],
-	["lv1", "How did you know?"],
-	["lv2", "What did you fight about, in the early years?"],
-	["lv3", "What does loving someone for forty years actually feel like?"],
-	["lv4", "What's the smallest thing you do for the people you love?"],
-	["lv5", "What did your mother teach you about love?"],
-	["wd1", "What's something only your mother knew about you?"],
-	["wd2", "What's the hardest thing you've ever had to forgive?"],
-	["wd3", "What advice do you wish someone had given you?"],
-	["wd4", "What's something you used to believe that you don't anymore?"],
-	["wd5", "When did you stop being afraid of something?"],
-	["ev1", 'What does "we\'ll see" really mean?'],
-	["ev2", "What's your morning look like, really?"],
-	["ev3", "What's a song that always brings you back?"],
-	["ev4", "What's the last thing that made you cry?"],
-	["ev5", "What's a small ritual you've never told anyone about?"],
-	["ts1", "Where do you feel most at home?"],
-	["ts2", "What's the moment you remember most clearly from your twenties?"],
-	["ts3", "What's a place you've never gone back to?"],
-	["ts4", "What's a job you almost took?"],
-	["ts5", "Tell me about your best friend in school."],
-]);
