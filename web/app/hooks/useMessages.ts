@@ -1,7 +1,3 @@
-// Messaging hooks. All endpoints require auth — react-query's
-// `enabled: !!user` pattern (or letting 401 surface to useUser) keeps
-// these from firing for signed-out visitors.
-
 import {
 	useMutation,
 	useQuery,
@@ -45,8 +41,6 @@ export function useSendMessage() {
 		mutationFn: (input: { toUserId: string; content: string }) =>
 			unwrap(api.messages.post(input)),
 		onSuccess: (result) => {
-			// Invalidate the inbox + the specific thread so both views
-			// pick up the new message without a manual refetch.
 			qc.invalidateQueries({ queryKey: messagesQueryKey })
 			qc.invalidateQueries({
 				queryKey: conversationQueryKey(result.message.toUserId),
@@ -60,9 +54,6 @@ export function useLogout() {
 	return useMutation({
 		mutationFn: () => unwrap(api.auth.logout.post()),
 		onSuccess: () => {
-			// Drop every cached query — sensitive content shouldn't
-			// outlive the session, and the next render will re-fetch
-			// with fresh auth state.
 			qc.setQueryData(userQueryKey, null)
 			qc.invalidateQueries()
 		},

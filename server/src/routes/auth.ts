@@ -1,13 +1,3 @@
-// Auth endpoints. Identity lives at api.xors.xyz — these routes resolve
-// the session cookie set by the Next.js /oauth callback and expose two
-// minimal endpoints the frontend needs:
-//
-//   GET  /auth/me      → current user, or 401 if unauthenticated
-//   POST /auth/logout  → clear the xors_session cookie
-//
-// Sign-in itself is a redirect to api.xors.xyz/authenticate-google
-// triggered from the web app — the server never sees a password.
-
 import { Elysia, t } from "elysia";
 import { authContext, XORS_SESSION_COOKIE } from "../lib/xors-identity";
 

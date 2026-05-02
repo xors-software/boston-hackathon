@@ -6,14 +6,14 @@ import { healthRoutes } from "./routes/health";
 import { messagesRoutes } from "./routes/messages";
 import { usersRoutes } from "./routes/users";
 
+// Loud boot log: missing API_AES_KEY/API_IV_KEY breaks /oauth decrypt,
+// and a silent failure is hard to diagnose in deploy logs.
 console.log(
-	"[boot] env: CORS_ORIGIN=",
+	"[boot] env:",
+	"CORS_ORIGIN=",
 	process.env.CORS_ORIGIN ?? "(default http://localhost:3000)",
 	"PORT=",
 	process.env.PORT ?? "(default 3001)",
-	// Without API_AES_KEY/API_IV_KEY the Next.js /oauth callback can't
-	// decrypt session keys handed out by api.xors.xyz, so every sign-in
-	// fails. Loud log on boot makes a missing var obvious.
 	"API_AES_KEY=",
 	process.env.API_AES_KEY ? "set" : "MISSING",
 	"API_IV_KEY=",

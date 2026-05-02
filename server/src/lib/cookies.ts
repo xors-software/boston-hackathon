@@ -1,7 +1,3 @@
-// Tiny cookie helpers shared across routes. Avoids a dependency on a
-// cookie-parsing package — Elysia gives us raw Headers and that's all we
-// need for an HttpOnly session cookie set by the Next.js /oauth callback.
-
 export function parseCookies(
 	header: string | null | undefined,
 ): Record<string, string> {

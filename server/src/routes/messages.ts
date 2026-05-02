@@ -1,10 +1,3 @@
-// Direct messaging between authenticated users. Every route requires a
-// valid xors_session cookie — handlers 401 on missing currentUser.
-//
-// Storage is an in-memory array for the starter. Replace with a real DB
-// when persistence matters; the route shapes are designed to translate
-// directly to a SQL `messages` table keyed by (from_user_id, to_user_id).
-
 import { Elysia, t } from "elysia";
 import {
 	authContext,
@@ -20,6 +13,9 @@ export interface Message {
 	createdAt: string;
 }
 
+// WARNING: in-memory only — restart loses every message. Swap for a
+// real DB before production. Route shapes are deliberately compatible
+// with a SQL `messages` table keyed by (from_user_id, to_user_id).
 const messages: Message[] = [];
 
 function generateMessageId(): string {
