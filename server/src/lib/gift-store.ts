@@ -42,7 +42,7 @@ export interface Question {
 	source: QuestionSource;
 	templateId: string | null;
 	text: string;
-	photoDataUrl: string | null;
+	photoUrl: string | null;
 	preface: string | null;
 	position: number;
 	createdAt: string;
@@ -146,7 +146,7 @@ function rowToQuestion(row: DbQuestion): Question {
 		source: row.source,
 		templateId: row.templateId,
 		text: row.text,
-		photoDataUrl: row.photoDataUrl,
+		photoUrl: row.photoUrl,
 		preface: row.preface,
 		position: row.position,
 		createdAt: row.createdAt.toISOString(),
@@ -439,7 +439,10 @@ export interface AddCustomQuestion {
 	source: "custom";
 	text: string;
 	preface?: string | null;
-	photoDataUrl?: string | null;
+	// Lets sync re-create a custom question while preserving the URL
+	// of an already-uploaded photo. The route does NOT accept a base64
+	// data URL here — actual uploads go through POST .../photo.
+	photoUrl?: string | null;
 }
 
 export async function addQuestion(
@@ -470,7 +473,7 @@ export async function addQuestion(
 						...baseValues,
 						source: "custom" as const,
 						preface: input.preface ?? null,
-						photoDataUrl: input.photoDataUrl ?? null,
+						photoUrl: input.photoUrl ?? null,
 					},
 		)
 		.returning();
@@ -525,11 +528,11 @@ export async function deleteQuestion(
 export async function setQuestionPhoto(
 	giftId: string,
 	qid: string,
-	photoDataUrl: string | null,
+	photoUrl: string | null,
 ): Promise<Question | null> {
 	const [row] = await db
 		.update(questionsTable)
-		.set({ photoDataUrl })
+		.set({ photoUrl })
 		.where(and(eq(questionsTable.giftId, giftId), eq(questionsTable.id, qid)))
 		.returning();
 	return row ? rowToQuestion(row) : null;

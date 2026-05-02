@@ -29,7 +29,20 @@ import {
 	requireUser,
 	responseSchema,
 } from "../lib/route-helpers";
+import { bucketFor, getStorage, keyFor } from "../lib/storage";
 import { type AppUser, authContext } from "../lib/xors-identity";
+
+// Cap matches recipient photo route. Bigger than 10MB usually means a misclick;
+// fail fast rather than burn bandwidth + bucket on something we'd reject anyway.
+const PHOTO_MAX_BYTES = 10 * 1024 * 1024;
+function extFromImageMime(mime: string): string {
+	if (mime.includes("png")) return "png";
+	if (mime.includes("jpeg") || mime.includes("jpg")) return "jpg";
+	if (mime.includes("webp")) return "webp";
+	if (mime.includes("gif")) return "gif";
+	if (mime.includes("heic")) return "heic";
+	return "bin";
+}
 
 const intentSchema = t.Union([
 	t.Literal("mom"),
@@ -373,7 +386,7 @@ export const giftsRoutes = new Elysia({ prefix: "/gifts" })
 				source: "custom",
 				text: ctx.body.text,
 				preface: ctx.body.preface,
-				photoDataUrl: ctx.body.photoDataUrl,
+				photoUrl: ctx.body.photoUrl,
 			});
 			return { question: q };
 		},
@@ -389,7 +402,7 @@ export const giftsRoutes = new Elysia({ prefix: "/gifts" })
 					source: t.Literal("custom"),
 					text: t.String({ minLength: 1, maxLength: 1000 }),
 					preface: t.Optional(t.Union([t.String({ maxLength: 500 }), t.Null()])),
-					photoDataUrl: t.Optional(t.Union([t.String(), t.Null()])),
+					photoUrl: t.Optional(t.Union([t.String({ maxLength: 2048 }), t.Null()])),
 				}),
 			]),
 			response: {
@@ -454,10 +467,36 @@ export const giftsRoutes = new Elysia({ prefix: "/gifts" })
 		async (ctx) => {
 			const result = await loadGift(ctx);
 			if (isFail(result)) return { error: result.error };
+			const file = ctx.body.photo as File;
+			if (!file || file.size === 0) {
+				ctx.set.status = 400;
+				return { error: "No photo file provided" };
+			}
+			if (!file.type.startsWith("image/")) {
+				ctx.set.status = 400;
+				return { error: "Photo must be an image" };
+			}
+			if (file.size > PHOTO_MAX_BYTES) {
+				ctx.set.status = 413;
+				return { error: "Photo must be under 10MB" };
+			}
+			const ext = extFromImageMime(file.type);
+			const storage = await getStorage();
+			const buf = await file.arrayBuffer();
+			const put = await storage.put({
+				bucket: bucketFor("q-photos"),
+				key: keyFor("q-photos", {
+					giftId: result.gift.id,
+					questionId: ctx.params.qid,
+					ext,
+				}),
+				body: buf,
+				contentType: file.type || "application/octet-stream",
+			});
 			const q = await setQuestionPhoto(
 				result.gift.id,
 				ctx.params.qid,
-				ctx.body.photoDataUrl,
+				put.url,
 			);
 			if (!q) {
 				ctx.set.status = 404;
@@ -467,13 +506,15 @@ export const giftsRoutes = new Elysia({ prefix: "/gifts" })
 		},
 		{
 			params: t.Object({ id: t.String(), qid: t.String() }),
-			body: t.Object({ photoDataUrl: t.String({ minLength: 1 }) }),
+			body: t.Object({ photo: t.File({ maxSize: "10m" }) }),
 			response: {
 				200: t.Object({ question: questionSchema }),
+				400: errorSchema,
 				401: errorSchema,
 				404: errorSchema,
+				413: errorSchema,
 			},
-			detail: { summary: "Attach a photo to a question", tags: ["Questions"] },
+			detail: { summary: "Upload a question photo (multipart → S3)", tags: ["Questions"] },
 		},
 	)
 	.delete(

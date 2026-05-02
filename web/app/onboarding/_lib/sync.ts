@@ -43,8 +43,13 @@ type FrontPerson = {
 type FrontCustomQuestion = {
 	id: string
 	text: string
-	photoDataUrl?: string
 	preface?: string
+	// Once a question lands on the server we keep its returned id here
+	// so re-syncs don't keep recreating it. Photos are uploaded directly
+	// from the write page (multipart → S3) and stored as URLs server-side,
+	// never inlined into the local snapshot.
+	serverId?: string
+	photoUrl?: string
 }
 type FrontQuestionsState = {
 	selectedIds: string[]
@@ -134,12 +139,15 @@ async function syncQuestions(
 	for (const id of qs.selectedIds) {
 		const custom = customById.get(id)
 		if (custom) {
+			// Photos were uploaded directly from the write page; we forward
+			// the resulting URL on re-create so the photo survives the
+			// wipe-and-recreate sync that runs at send-time.
 			await unwrap(
 				api.gifts({ id: giftId }).questions.post({
 					source: "custom",
 					text: custom.text,
 					preface: custom.preface ?? null,
-					photoDataUrl: custom.photoDataUrl ?? null,
+					photoUrl: custom.photoUrl ?? null,
 				}),
 			)
 		} else {

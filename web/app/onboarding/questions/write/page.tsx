@@ -1,38 +1,64 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { type ChangeEvent, type FormEvent, useRef, useState } from "react"
+import { type ChangeEvent, type FormEvent, useEffect, useRef, useState } from "react"
 import { useOnboardingState } from "../../_lib/state"
+import { getStoredGiftId, useEnsureGift } from "../../_lib/sync"
 
 const QUESTION_MAX = 280
+const PHOTO_MAX_BYTES = 10 * 1024 * 1024 // 10MB — matches server cap
 
 type CustomQuestion = {
 	id: string
 	text: string
-	photoDataUrl?: string
 	preface?: string
+	photoUrl?: string
 }
 
 type QuestionsState = {
 	selectedIds: string[]
 	custom: CustomQuestion[]
+	edits?: Record<string, string>
 }
 
-const newId = () =>
-	`q_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
+function apiBase(): string {
+	const direct = process.env.NEXT_PUBLIC_API_URL
+	if (direct) return direct.replace(/\/$/, "")
+	if (typeof window !== "undefined") return `${window.location.origin}/api`
+	return "http://localhost:3000/api"
+}
 
 export default function WriteQuestionPage() {
 	const router = useRouter()
-	const { state, update } = useOnboardingState()
+	const { state, update, hydrated } = useOnboardingState()
+	// useEnsureGift is the single source of truth for gift creation across
+	// onboarding (set up on the account page). We piggy-back on it here so
+	// landing directly on /write still has a giftId to upload against.
+	const { giftId, creating } = useEnsureGift(hydrated ? state : null)
 
 	const [text, setText] = useState("")
-	const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null)
+	const [photoFile, setPhotoFile] = useState<File | null>(null)
+	const [photoPreview, setPhotoPreview] = useState<string | null>(null)
 	const [photoError, setPhotoError] = useState<string | null>(null)
 	const [preface, setPreface] = useState("")
+	const [submitting, setSubmitting] = useState(false)
+	const [submitError, setSubmitError] = useState<string | null>(null)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 
 	const trimmed = text.trim()
-	const canSave = trimmed.length > 0
+	const canSave = trimmed.length > 0 && !submitting && !creating && Boolean(giftId)
+
+	// Object URL preview only — no base64, no localStorage. The server holds
+	// the canonical image once uploaded; the preview lives just for this view.
+	useEffect(() => {
+		if (!photoFile) {
+			setPhotoPreview(null)
+			return
+		}
+		const url = URL.createObjectURL(photoFile)
+		setPhotoPreview(url)
+		return () => URL.revokeObjectURL(url)
+	}, [photoFile])
 
 	const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
 		setPhotoError(null)
@@ -42,42 +68,88 @@ export default function WriteQuestionPage() {
 			setPhotoError("Please pick an image file.")
 			return
 		}
-		// 4MB cap — keeps localStorage happy on most setups
-		if (file.size > 4 * 1024 * 1024) {
-			setPhotoError("Photo is too large. Pick one under 4MB.")
+		if (file.size > PHOTO_MAX_BYTES) {
+			setPhotoError("Photo is too large. Pick one under 10MB.")
 			return
 		}
-		const reader = new FileReader()
-		reader.onload = () => {
-			if (typeof reader.result === "string") setPhotoDataUrl(reader.result)
-		}
-		reader.onerror = () => setPhotoError("Couldn't read that file.")
-		reader.readAsDataURL(file)
+		setPhotoFile(file)
 	}
 
-	const handleSubmit = (e: FormEvent) => {
+	const handleSubmit = async (e: FormEvent) => {
 		e.preventDefault()
 		if (!canSave) return
+		setSubmitting(true)
+		setSubmitError(null)
+		try {
+			const id = giftId ?? getStoredGiftId()
+			if (!id) {
+				throw new Error("No gift in progress — finish onboarding setup first.")
+			}
 
-		const id = newId()
-		const newQ: CustomQuestion = {
-			id,
-			text: trimmed,
-			photoDataUrl: photoDataUrl ?? undefined,
-			preface: preface.trim() || undefined,
-		}
+			const createRes = await fetch(`${apiBase()}/gifts/${id}/questions`, {
+				method: "POST",
+				credentials: "include",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({
+					source: "custom",
+					text: trimmed,
+					preface: preface.trim() || undefined,
+				}),
+			})
+			if (!createRes.ok) {
+				throw new Error(`Failed to create question (${createRes.status})`)
+			}
+			const { question } = (await createRes.json()) as {
+				question: { id: string }
+			}
 
-		const prev = (state.data.questions as QuestionsState | undefined) ?? {
-			selectedIds: [],
-			custom: [],
-		}
-		const next: QuestionsState = {
-			selectedIds: [...prev.selectedIds, id],
-			custom: [newQ, ...prev.custom],
-		}
+			let photoUrl: string | undefined
+			if (photoFile) {
+				const fd = new FormData()
+				fd.append("photo", photoFile)
+				const photoRes = await fetch(
+					`${apiBase()}/gifts/${id}/questions/${question.id}/photo`,
+					{ method: "POST", credentials: "include", body: fd },
+				)
+				if (!photoRes.ok) {
+					throw new Error(`Failed to upload photo (${photoRes.status})`)
+				}
+				const { question: updated } = (await photoRes.json()) as {
+					question: { photoUrl: string | null }
+				}
+				photoUrl = updated.photoUrl ?? undefined
+			}
 
-		update({ data: { questions: next } })
-		router.push("/onboarding/questions")
+			const newQ: CustomQuestion = {
+				id: question.id,
+				text: trimmed,
+				preface: preface.trim() || undefined,
+				photoUrl,
+			}
+
+			const prev = (state.data.questions as QuestionsState | undefined) ?? {
+				selectedIds: [],
+				custom: [],
+			}
+			const next: QuestionsState = {
+				selectedIds: [...prev.selectedIds, question.id],
+				custom: [newQ, ...prev.custom],
+				edits: prev.edits,
+			}
+
+			update({ data: { questions: next } })
+			router.push("/onboarding/questions")
+		} catch (err) {
+			setSubmitError(
+				err instanceof Error ? err.message : "Something went wrong saving.",
+			)
+		} finally {
+			setSubmitting(false)
+		}
+	}
+
+	if (!hydrated) {
+		return <main className="min-h-dvh bg-white" />
 	}
 
 	return (
@@ -143,10 +215,10 @@ export default function WriteQuestionPage() {
 							onChange={handlePhotoChange}
 							className="hidden"
 						/>
-						{photoDataUrl ? (
+						{photoPreview ? (
 							<div className="relative rounded-2xl border border-neutral-200 bg-neutral-50 overflow-hidden">
 								<img
-									src={photoDataUrl}
+									src={photoPreview}
 									alt="Question photo preview"
 									className="block w-full max-h-64 object-cover"
 								/>
@@ -161,7 +233,7 @@ export default function WriteQuestionPage() {
 									<button
 										type="button"
 										onClick={() => {
-											setPhotoDataUrl(null)
+											setPhotoFile(null)
 											if (fileInputRef.current) fileInputRef.current.value = ""
 										}}
 										className="text-sm text-neutral-500 hover:text-neutral-700 transition-colors"
@@ -214,12 +286,16 @@ export default function WriteQuestionPage() {
 						/>
 					</label>
 
+					{submitError && (
+						<p className="text-sm text-red-500">{submitError}</p>
+					)}
+
 					<button
 						type="submit"
 						disabled={!canSave}
 						className="mt-2 w-full rounded-2xl bg-neutral-900 py-4 text-base font-medium text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
 					>
-						Save question
+						{submitting ? "Saving…" : "Save question"}
 					</button>
 
 					<button

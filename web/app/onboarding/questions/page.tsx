@@ -24,7 +24,7 @@ type CategoryFilter = "suggested" | QuestionCategory
 type CustomQuestion = {
 	id: string
 	text: string
-	photoDataUrl?: string
+	photoUrl?: string
 	preface?: string
 }
 
