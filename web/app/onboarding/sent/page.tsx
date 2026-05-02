@@ -67,7 +67,7 @@ export default function SentPage() {
 					{recipientLink && (
 						<div className="w-full mb-10 rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-4 text-left">
 							<div className="text-xs uppercase tracking-wider text-neutral-500 mb-2">
-								Recipient link (preview — email delivery isn't wired yet)
+								Recipient link (also delivered by email — backup copy)
 							</div>
 							<div className="break-all text-sm text-neutral-800 font-mono">
 								{recipientLink}
