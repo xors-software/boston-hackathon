@@ -1,8 +1,26 @@
 import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
 import { Elysia } from "elysia";
+import { authRoutes } from "./routes/auth";
 import { healthRoutes } from "./routes/health";
+import { messagesRoutes } from "./routes/messages";
 import { usersRoutes } from "./routes/users";
+
+console.log(
+	"[boot] env: CORS_ORIGIN=",
+	process.env.CORS_ORIGIN ?? "(default http://localhost:3000)",
+	"PORT=",
+	process.env.PORT ?? "(default 3001)",
+	// Without API_AES_KEY/API_IV_KEY the Next.js /oauth callback can't
+	// decrypt session keys handed out by api.xors.xyz, so every sign-in
+	// fails. Loud log on boot makes a missing var obvious.
+	"API_AES_KEY=",
+	process.env.API_AES_KEY ? "set" : "MISSING",
+	"API_IV_KEY=",
+	process.env.API_IV_KEY ? "set" : "MISSING",
+	"XORS_API_URL=",
+	process.env.XORS_API_URL ?? "(default https://api.xors.xyz)",
+);
 
 const app = new Elysia()
 	.use(
@@ -23,7 +41,9 @@ const app = new Elysia()
 		}),
 	)
 	.use(healthRoutes)
+	.use(authRoutes)
 	.use(usersRoutes)
+	.use(messagesRoutes)
 	.listen(process.env.PORT || 3001);
 
 console.log(

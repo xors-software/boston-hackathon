@@ -3,6 +3,12 @@
 	"description": "Elysia backend API for XORS projects.",
 	"version": "1.0.0",
 	"private": true,
+	"type": "module",
+	"main": "./src/index.ts",
+	"types": "./src/index.ts",
+	"exports": {
+		".": "./src/index.ts"
+	},
 	"scripts": {
 		"dev": "bun run --watch src/index.ts",
 		"build": "bun build src/index.ts --outdir ./dist --target bun",
