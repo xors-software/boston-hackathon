@@ -1,6 +1,6 @@
 "use client"
 
-import { Button, Text } from "@/components"
+import { AuthStatus, Button, Text } from "@/components"
 import { Check, Home as HomeIcon, Warning, WifiOff } from "@/components/icons/generated"
 import { toast } from "sonner"
 
@@ -26,6 +26,7 @@ export default function Home() {
 						<a href="https://github.com" target="_blank" rel="noopener" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
 							GitHub
 						</a>
+						<AuthStatus />
 					</nav>
 				</div>
 			</header>
