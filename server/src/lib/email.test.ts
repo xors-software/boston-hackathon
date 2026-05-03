@@ -111,7 +111,8 @@ describe("sendInvitation", () => {
 		globalThis.fetch = (async (
 			_input: string | URL | Request,
 			_init?: RequestInit,
-		) => new Response("invalid api key", { status: 401 })) as unknown as typeof fetch;
+		) =>
+			new Response("invalid api key", { status: 401 })) as unknown as typeof fetch;
 
 		await expect(sendInvitation(baseInput)).rejects.toThrow(/Resend 401/);
 	});
