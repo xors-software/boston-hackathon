@@ -135,7 +135,7 @@ export const questions = pgTable(
 		source: questionSourceEnum("source").notNull(),
 		templateId: text("template_id"),
 		text: text("text").notNull(),
-		photoDataUrl: text("photo_data_url"),
+		photoUrl: text("photo_url"),
 		preface: text("preface"),
 		position: integer("position").notNull().default(0),
 		createdAt: timestamp("created_at", { withTimezone: true })

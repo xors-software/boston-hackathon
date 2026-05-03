@@ -190,12 +190,12 @@ export default function AiAboutPage() {
 	}
 
 	return (
-		<main className="min-h-dvh bg-white flex flex-col">
+		<main className="min-h-dvh bg-[color:var(--ember-card)] flex flex-col">
 			<div className="mx-auto w-full max-w-md flex-1 flex flex-col px-6 pt-6 pb-6 sm:px-8">
 				<button
 					type="button"
 					onClick={() => router.back()}
-					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-neutral-700 transition-colors hover:text-neutral-900"
+					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:text-[color:var(--ember-ink)]"
 				>
 					<svg
 						aria-hidden="true"
@@ -213,10 +213,10 @@ export default function AiAboutPage() {
 				</button>
 
 				<header className="mt-4 mb-5">
-					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-neutral-900">
+					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)]">
 						Let's talk about {labels.subject}.
 					</h1>
-					<p className="text-base text-neutral-500 leading-relaxed">
+					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						I'll ask a few questions. What you tell me here personalizes{" "}
 						{labels.possessive} prompts and stays private to you.
 					</p>
@@ -232,17 +232,17 @@ export default function AiAboutPage() {
 								key={i}
 								className="self-start max-w-[85%] rounded-2xl bg-neutral-100 px-4 py-3"
 							>
-								<div className="text-[10px] font-medium uppercase tracking-[0.12em] text-neutral-400 mb-1">
+								<div className="text-[10px] font-medium uppercase tracking-[0.12em] text-[color:var(--ember-soft-gray)] mb-1">
 									EMBER
 								</div>
-								<div className="text-base text-neutral-900 leading-relaxed whitespace-pre-wrap">
+								<div className="text-base text-[color:var(--ember-ink)] leading-relaxed whitespace-pre-wrap">
 									{m.content}
 								</div>
 							</div>
 						) : (
 							<div
 								key={i}
-								className="self-end max-w-[85%] rounded-2xl bg-neutral-900 px-4 py-3"
+								className="self-end max-w-[85%] rounded-2xl bg-[color:var(--ember-ink)] px-4 py-3"
 							>
 								<div className="text-base text-white leading-relaxed whitespace-pre-wrap">
 									{m.content}
@@ -251,7 +251,7 @@ export default function AiAboutPage() {
 						),
 					)}
 					{sending && (
-						<div className="self-start text-sm italic text-neutral-400 pl-1">
+						<div className="self-start text-sm italic text-[color:var(--ember-soft-gray)] pl-1">
 							typing…
 						</div>
 					)}
@@ -263,7 +263,7 @@ export default function AiAboutPage() {
 
 				<form
 					onSubmit={onSubmit}
-					className="relative mt-4 rounded-2xl border border-neutral-200 bg-white focus-within:border-neutral-900 transition-colors"
+					className="relative mt-4 rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] focus-within:border-neutral-900 transition-colors"
 				>
 					<input
 						type="text"
@@ -273,7 +273,7 @@ export default function AiAboutPage() {
 							transcribing ? "Transcribing…" : "Type your reply..."
 						}
 						disabled={transcribing || ending}
-						className="block w-full rounded-2xl bg-transparent pl-4 pr-12 py-3.5 text-base text-neutral-900 placeholder:text-neutral-400 outline-none disabled:opacity-60"
+						className="block w-full rounded-2xl bg-transparent pl-4 pr-12 py-3.5 text-base text-[color:var(--ember-ink)] placeholder:text-[color:var(--ember-soft-gray)] outline-none disabled:opacity-60"
 					/>
 					<button
 						type="button"
@@ -283,12 +283,12 @@ export default function AiAboutPage() {
 						className={`absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full border transition-colors ${
 							recording
 								? "border-red-500 bg-red-500"
-								: "border-neutral-300 bg-white hover:bg-neutral-100"
+								: "border-[color:var(--ember-divider)] bg-[color:var(--ember-card)] hover:bg-neutral-100"
 						} disabled:opacity-50 disabled:cursor-not-allowed`}
 					>
 						{transcribing ? (
 							<svg
-								className="h-3.5 w-3.5 animate-spin text-neutral-500"
+								className="h-3.5 w-3.5 animate-spin text-[color:var(--ember-warm-gray)]"
 								viewBox="0 0 24 24"
 								fill="none"
 							>
@@ -310,7 +310,7 @@ export default function AiAboutPage() {
 						) : (
 							<span
 								className={`block h-2.5 w-2.5 rounded-full ${
-									recording ? "bg-white animate-pulse" : "bg-neutral-700"
+									recording ? "bg-[color:var(--ember-card)] animate-pulse" : "bg-neutral-700"
 								}`}
 							/>
 						)}
@@ -318,21 +318,21 @@ export default function AiAboutPage() {
 				</form>
 
 				<div className="mt-3 flex items-center justify-between text-sm">
-					<span className="text-neutral-500">
+					<span className="text-[color:var(--ember-warm-gray)]">
 						{userQuestionsAnswered} of ~{TARGET_QUESTIONS} questions
 					</span>
 					<button
 						type="button"
 						onClick={endConversation}
 						disabled={ending || messages.length === 0}
-						className="inline-flex items-center gap-1 text-neutral-900 underline underline-offset-2 transition-colors hover:text-neutral-700 disabled:opacity-50 disabled:no-underline"
+						className="inline-flex items-center gap-1 text-[color:var(--ember-ink)] underline underline-offset-2 transition-colors hover:text-[color:var(--ember-warm-gray)] disabled:opacity-50 disabled:no-underline"
 					>
 						{ending ? "Saving…" : "End conversation"}
 						{!ending && <span aria-hidden="true">→</span>}
 					</button>
 				</div>
 
-				<p className="mt-3 text-center text-sm text-neutral-400">
+				<p className="mt-3 text-center text-sm text-[color:var(--ember-soft-gray)]">
 					Private to you. Never shared with {labels.subject}.
 				</p>
 			</div>

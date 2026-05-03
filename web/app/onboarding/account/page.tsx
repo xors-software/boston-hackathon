@@ -1,25 +1,35 @@
 "use client"
 
-import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { type FormEvent, use, useEffect, useState } from "react"
+import { useLogin } from "@/hooks/useLogin"
 import { useUser } from "@/hooks/useUser"
+import { ApiError } from "@/lib/api"
 import { buildXorsSignInUrl } from "@/lib/xors"
 import { useOnboardingState } from "../_lib/state"
 import { useEnsureGift } from "../_lib/sync"
 
-export default function AccountPage() {
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+type SearchParams = Promise<{ signed_in?: string; error?: string }>
+
+export default function AccountPage({ searchParams }: { searchParams: SearchParams }) {
 	const router = useRouter()
-	const search = useSearchParams()
+	const search = use(searchParams)
 	const { state, update, hydrated } = useOnboardingState()
 	const { data: user, isLoading } = useUser()
+	const login = useLogin()
 	useEnsureGift(hydrated ? state : null)
 
-	const justSignedIn = search.get("signed_in") === "google"
-	const oauthError = search.get("error")
+	const justSignedIn = search.signed_in === "google"
+	const oauthError = search.error
+
+	const [email, setEmail] = useState("")
+	const [password, setPassword] = useState("")
+	const [touched, setTouched] = useState(false)
 
 	useEffect(() => {
 		if (!hydrated || !user) return
-		// If they already sent, skip onboarding entirely
 		if (state.data.sentAt) {
 			router.replace("/dashboard")
 		}
@@ -34,55 +44,97 @@ export default function AccountPage() {
 		router.push("/onboarding/recipient")
 	}
 
+	const emailValid = EMAIL_RE.test(email)
+	const passwordValid = password.length >= 8
+	const canSubmit = emailValid && passwordValid && !login.isPending
+
+	const submitEmail = async (e: FormEvent) => {
+		e.preventDefault()
+		setTouched(true)
+		if (!canSubmit) return
+		try {
+			await login.mutateAsync({ email, password })
+			// useUser will refetch and surface the signed-in state on next render
+		} catch {
+			// Error surfaces via login.error below
+		}
+	}
+
+	const loginError =
+		login.error instanceof ApiError ? login.error.message : null
+
 	return (
-		<main className="min-h-dvh bg-white">
+		<main className="min-h-dvh bg-[color:var(--ember-card)]">
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-12 sm:px-8">
 				<button
 					type="button"
 					onClick={() => router.back()}
-					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-neutral-700 transition-colors hover:text-neutral-900"
+					className="-ml-1 inline-flex items-center gap-1.5 py-2 text-base transition-opacity hover:opacity-80"
+					style={{ color: "var(--ember-warm-gray)" }}
 				>
 					<svg
 						aria-hidden="true"
 						viewBox="0 0 24 24"
 						fill="none"
 						stroke="currentColor"
-						strokeWidth="2"
+						strokeWidth="1.75"
 						strokeLinecap="round"
 						strokeLinejoin="round"
 						className="h-4 w-4"
 					>
 						<polyline points="15 6 9 12 15 18" />
 					</svg>
-					Back
+					<span className="font-serif italic">Back</span>
 				</button>
 
 				<header className="mt-6 mb-8">
-					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-neutral-900">
-						Create your account.
+					<h1
+						className="mb-3 font-serif text-[40px] sm:text-[44px] leading-[1.05] tracking-tight"
+						style={{ color: "var(--ember-ink)" }}
+					>
+						Create your{" "}
+						<span
+							className="italic"
+							style={{ color: "var(--ember-terracotta)" }}
+						>
+							account
+						</span>
+						.
 					</h1>
-					<p className="text-base text-neutral-500 leading-relaxed">
+					<p
+						className="text-base leading-relaxed"
+						style={{ color: "var(--ember-warm-gray)" }}
+					>
 						Your gift is saved automatically as you build it.
 					</p>
 				</header>
 
 				{oauthError && !user && (
-					<p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+					<p className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
 						Sign-in didn't complete ({oauthError}). Try again.
 					</p>
 				)}
 
 				{user ? (
 					<div className="flex flex-col gap-5">
-						<div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-5 py-4">
-							<div className="text-xs uppercase tracking-wider text-neutral-400 mb-1">
+						<div className="rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-cream-light)] px-5 py-4">
+							<div
+								className="text-[10px] font-medium tracking-[0.22em] uppercase mb-1"
+								style={{ color: "var(--ember-warm-gray)" }}
+							>
 								Signed in
 							</div>
-							<div className="text-base font-medium text-neutral-900">
+							<div
+								className="text-base font-medium"
+								style={{ color: "var(--ember-ink)" }}
+							>
 								{user.email || user.displayName || "Your account"}
 							</div>
 							{justSignedIn && (
-								<div className="mt-1 text-sm text-neutral-500">
+								<div
+									className="mt-1 text-sm font-serif italic"
+									style={{ color: "var(--ember-warm-gray)" }}
+								>
 									Welcome. Let's keep going.
 								</div>
 							)}
@@ -91,18 +143,32 @@ export default function AccountPage() {
 						<button
 							type="button"
 							onClick={handleContinue}
-							className="w-full rounded-2xl bg-neutral-900 py-4 text-base font-medium text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700"
+							className="ember-cta ember-cta-with-arrow"
 						>
-							Continue
+							<span>Continue</span>
+							<span aria-hidden="true" className="ember-cta-arrow">
+								<svg
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="1.75"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									className="h-4 w-4"
+								>
+									<line x1="5" y1="12" x2="19" y2="12" />
+									<polyline points="13 6 19 12 13 18" />
+								</svg>
+							</span>
 						</button>
 					</div>
 				) : (
-					<div className="flex flex-col gap-4">
+					<div className="flex flex-col gap-5">
 						<button
 							type="button"
 							onClick={handleSignIn}
 							disabled={isLoading}
-							className="w-full inline-flex items-center justify-center gap-3 rounded-2xl bg-neutral-900 py-4 text-base font-medium text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700 disabled:opacity-60"
+							className="ember-cta"
 						>
 							<svg
 								aria-hidden="true"
@@ -132,8 +198,122 @@ export default function AccountPage() {
 							Continue with Google
 						</button>
 
-						<p className="text-center text-sm text-neutral-500">
-							We use Google for sign-in. We never post anything.
+						<div className="flex items-center gap-3">
+							<div
+								className="h-px flex-1"
+								style={{ backgroundColor: "var(--ember-divider)" }}
+							/>
+							<span
+								className="font-serif italic text-sm"
+								style={{ color: "var(--ember-warm-gray)" }}
+							>
+								or
+							</span>
+							<div
+								className="h-px flex-1"
+								style={{ backgroundColor: "var(--ember-divider)" }}
+							/>
+						</div>
+
+						<form
+							onSubmit={submitEmail}
+							className="flex flex-col gap-4"
+							noValidate
+						>
+							<label className="flex flex-col gap-2">
+								<span
+									className="text-[11px] font-medium tracking-[0.22em] uppercase"
+									style={{ color: "var(--ember-warm-gray)" }}
+								>
+									Email
+								</span>
+								<input
+									type="email"
+									inputMode="email"
+									autoComplete="email"
+									placeholder="you@example.com"
+									value={email}
+									onChange={(e) => setEmail(e.target.value)}
+									className="w-full rounded-2xl px-4 py-3.5 text-base outline-none transition-colors placeholder:italic"
+									style={{
+										backgroundColor: "var(--ember-cream-light)",
+										color: "var(--ember-ink)",
+										border:
+											touched && !emailValid
+												? "1px solid var(--ember-terracotta)"
+												: "1px solid var(--ember-divider)",
+									}}
+								/>
+							</label>
+
+							<label className="flex flex-col gap-2">
+								<span
+									className="text-[11px] font-medium tracking-[0.22em] uppercase"
+									style={{ color: "var(--ember-warm-gray)" }}
+								>
+									Password
+								</span>
+								<input
+									type="password"
+									autoComplete="current-password"
+									placeholder="At least 8 characters"
+									value={password}
+									onChange={(e) => setPassword(e.target.value)}
+									className="w-full rounded-2xl px-4 py-3.5 text-base outline-none transition-colors placeholder:italic"
+									style={{
+										backgroundColor: "var(--ember-cream-light)",
+										color: "var(--ember-ink)",
+										border:
+											touched && !passwordValid
+												? "1px solid var(--ember-terracotta)"
+												: "1px solid var(--ember-divider)",
+									}}
+								/>
+							</label>
+
+							{loginError && (
+								<p
+									className="text-sm"
+									style={{ color: "var(--ember-terracotta)" }}
+									role="alert"
+								>
+									{loginError}
+								</p>
+							)}
+
+							<button
+								type="submit"
+								disabled={touched && !canSubmit}
+								className="ember-cta ember-cta-with-arrow"
+							>
+								<span>
+									{login.isPending
+										? "Signing in…"
+										: "Continue with email"}
+								</span>
+								<span aria-hidden="true" className="ember-cta-arrow">
+									<svg
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="1.75"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										className="h-4 w-4"
+									>
+										<line x1="5" y1="12" x2="19" y2="12" />
+										<polyline points="13 6 19 12 13 18" />
+									</svg>
+								</span>
+							</button>
+						</form>
+
+						<p
+							className="text-center text-sm font-serif italic"
+							style={{ color: "var(--ember-warm-gray)" }}
+						>
+							New here? Signing in with an unknown email creates an account
+							automatically.
 						</p>
 					</div>
 				)}

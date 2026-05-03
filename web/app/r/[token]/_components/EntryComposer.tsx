@@ -156,20 +156,32 @@ export function EntryComposer({
 	return (
 		<form onSubmit={submit} className="flex flex-col gap-4">
 			{promptText && (
-				<p className="text-base italic text-neutral-700">"{promptText}"</p>
+				<p
+					className="font-serif italic text-base"
+					style={{ color: "var(--ember-warm-gray)" }}
+				>
+					"{promptText}"
+				</p>
 			)}
 
-			<div className="relative rounded-2xl bg-white border border-neutral-200 focus-within:border-neutral-900 transition-colors">
+			<div
+				className="relative rounded-2xl"
+				style={{ backgroundColor: "var(--ember-input)" }}
+			>
 				<textarea
 					value={text}
 					onChange={(e) => setText(e.target.value.slice(0, TEXT_MAX))}
-					placeholder={transcribing ? "Transcribing…" : "Start writing..."}
+					placeholder={transcribing ? "Transcribing…" : "Start writing"}
 					rows={6}
 					autoFocus={autoFocus}
 					disabled={transcribing}
-					className="w-full resize-none rounded-2xl bg-transparent px-4 pt-4 pb-12 text-base text-neutral-900 placeholder:text-neutral-400 placeholder:italic outline-none disabled:opacity-60"
+					className="w-full resize-none rounded-2xl bg-transparent px-5 pt-5 pb-14 text-lg font-serif italic placeholder:italic outline-none disabled:opacity-60"
+					style={{ color: "var(--ember-ink)" }}
 				/>
-				<div className="pointer-events-none absolute left-4 bottom-3 text-xs text-neutral-400">
+				<div
+					className="pointer-events-none absolute left-5 bottom-4 text-base font-serif"
+					style={{ color: "var(--ember-soft-gray)" }}
+				>
 					{text.length} / {TEXT_MAX}
 				</div>
 				<button
@@ -177,44 +189,24 @@ export function EntryComposer({
 					onClick={toggleRecord}
 					disabled={transcribing}
 					aria-label={recording ? "Stop recording" : "Record voice"}
-					className={`absolute right-3 bottom-3 flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${
-						recording
-							? "border-red-500 bg-red-500"
-							: "border-neutral-300 bg-white hover:bg-neutral-100"
-					} disabled:opacity-50 disabled:cursor-not-allowed`}
+					className="absolute right-4 bottom-3 flex h-10 w-10 items-center justify-center rounded-full transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+					style={{
+						backgroundColor: recording ? "var(--ember-terracotta)" : "transparent",
+						color: recording ? "#fff" : "var(--ember-warm-gray)",
+						border: recording
+							? "1px solid var(--ember-terracotta)"
+							: "1px solid var(--ember-divider)",
+					}}
 				>
 					{transcribing ? (
-						<svg
-							className="h-4 w-4 animate-spin text-neutral-500"
-							viewBox="0 0 24 24"
-							fill="none"
-						>
-							<circle
-								cx="12"
-								cy="12"
-								r="9"
-								stroke="currentColor"
-								strokeWidth="2"
-								opacity="0.25"
-							/>
-							<path
-								d="M21 12a9 9 0 0 0-9-9"
-								stroke="currentColor"
-								strokeWidth="2"
-								strokeLinecap="round"
-							/>
+						<svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+							<circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" opacity="0.25" />
+							<path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
 						</svg>
 					) : recording ? (
-						<span className="block h-3 w-3 rounded-full bg-white animate-pulse" />
+						<span className="block h-2.5 w-2.5 rounded-full bg-white animate-pulse" />
 					) : (
-						<svg
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="1.75"
-							className="h-4 w-4 text-neutral-700"
-							aria-hidden="true"
-						>
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5" aria-hidden="true">
 							<rect x="9" y="3" width="6" height="12" rx="3" />
 							<path d="M5 11v1a7 7 0 0 0 14 0v-1" />
 							<line x1="12" y1="19" x2="12" y2="22" />
@@ -232,17 +224,26 @@ export function EntryComposer({
 			/>
 
 			{photoDataUrl ? (
-				<div className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden">
+				<div
+					className="relative rounded-2xl overflow-hidden"
+					style={{ backgroundColor: "var(--ember-cream-light)" }}
+				>
 					<img
 						src={photoDataUrl}
 						alt="Entry"
 						className="block w-full max-h-64 object-cover"
 					/>
-					<div className="flex items-center justify-end gap-3 px-4 py-2 border-t border-neutral-200">
+					<div
+						className="flex items-center justify-end gap-3 px-4 py-2"
+						style={{
+							borderTop: "1px solid var(--ember-divider)",
+						}}
+					>
 						<button
 							type="button"
 							onClick={() => fileInputRef.current?.click()}
-							className="text-sm text-neutral-700 hover:text-neutral-900"
+							className="font-serif italic text-sm"
+							style={{ color: "var(--ember-warm-gray)" }}
 						>
 							Replace
 						</button>
@@ -252,7 +253,8 @@ export function EntryComposer({
 								setPhotoDataUrl(null)
 								if (fileInputRef.current) fileInputRef.current.value = ""
 							}}
-							className="text-sm text-neutral-500 hover:text-neutral-700"
+							className="font-serif italic text-sm"
+							style={{ color: "var(--ember-warm-gray)" }}
 						>
 							Remove
 						</button>
@@ -262,13 +264,18 @@ export function EntryComposer({
 				<button
 					type="button"
 					onClick={() => fileInputRef.current?.click()}
-					className="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50 self-start"
+					className="inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm self-start transition-opacity hover:opacity-80"
+					style={{
+						backgroundColor: "transparent",
+						color: "var(--ember-warm-gray)",
+						border: "1px solid var(--ember-divider)",
+					}}
 				>
 					<svg
 						viewBox="0 0 24 24"
 						fill="none"
 						stroke="currentColor"
-						strokeWidth="1.75"
+						strokeWidth="1.5"
 						className="h-4 w-4"
 						aria-hidden="true"
 					>
@@ -276,19 +283,28 @@ export function EntryComposer({
 						<circle cx="9" cy="11" r="2" />
 						<polyline points="21 16 15 11 5 19" />
 					</svg>
-					Add a photo
+					<span className="font-serif italic">Add a photo</span>
 				</button>
 			)}
 
-			{photoError && <p className="text-sm text-red-500">{photoError}</p>}
-			{recError && <p className="text-sm text-red-500">{recError}</p>}
+			{photoError && (
+				<p className="text-sm" style={{ color: "var(--ember-terracotta)" }}>
+					{photoError}
+				</p>
+			)}
+			{recError && (
+				<p className="text-sm" style={{ color: "var(--ember-terracotta)" }}>
+					{recError}
+				</p>
+			)}
 
 			<div className="flex items-center justify-end gap-3">
 				{onCancel && (
 					<button
 						type="button"
 						onClick={onCancel}
-						className="px-4 py-2 text-sm text-neutral-500 hover:text-neutral-700 transition-colors"
+						className="font-serif italic px-4 py-2 text-base transition-opacity hover:opacity-80"
+						style={{ color: "var(--ember-warm-gray)" }}
 					>
 						Cancel
 					</button>
@@ -296,9 +312,28 @@ export function EntryComposer({
 				<button
 					type="submit"
 					disabled={!canSave}
-					className="rounded-2xl bg-neutral-900 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
+					className="group relative inline-flex items-center justify-center rounded-full pl-6 pr-14 py-3.5 text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+					style={{ backgroundColor: "var(--ember-ink)" }}
 				>
-					{saveLabel}
+					<span>{saveLabel}</span>
+					<span
+						aria-hidden="true"
+						className="absolute right-2 flex h-9 w-9 items-center justify-center rounded-full"
+						style={{ backgroundColor: "rgba(255,255,255,0.12)" }}
+					>
+						<svg
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="1.75"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							className="h-4 w-4"
+						>
+							<line x1="5" y1="12" x2="19" y2="12" />
+							<polyline points="13 6 19 12 13 18" />
+						</svg>
+					</span>
 				</button>
 			</div>
 		</form>

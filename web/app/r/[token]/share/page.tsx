@@ -53,7 +53,7 @@ export default function SharePage() {
 	return (
 		<main
 			className="min-h-dvh w-full"
-			style={{ backgroundColor: "#F1ECE2" }}
+			style={{ backgroundColor: "var(--ember-cream)" }}
 		>
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-32 sm:px-8">
 				<div className="flex items-center justify-end">
@@ -61,27 +61,27 @@ export default function SharePage() {
 				</div>
 
 				<header className="mt-10 mb-8">
-					<p className="text-[11px] font-medium tracking-[0.18em] uppercase text-neutral-500 mb-3">
+					<p className="text-[11px] font-medium tracking-[0.18em] uppercase text-[color:var(--ember-warm-gray)] mb-3">
 						Settings · Sharing
 					</p>
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-neutral-900 mb-4">
+					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)] mb-4">
 						Sharing
 					</h1>
-					<p className="text-base text-neutral-700 leading-relaxed">
+					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						Your journal is yours, ongoing, for as long as you keep writing.
 						There's no end — but if and when you'd like to share what you've
 						gathered, you can do it from here.
 					</p>
 				</header>
 
-				<div className="rounded-2xl bg-white px-5 py-4 mb-3">
-					<p className="text-[11px] font-medium tracking-[0.18em] uppercase text-neutral-500 mb-1">
+				<div className="rounded-2xl bg-[color:var(--ember-card)] px-5 py-4 mb-3">
+					<p className="text-[11px] font-medium tracking-[0.18em] uppercase text-[color:var(--ember-warm-gray)] mb-1">
 						Currently set to
 					</p>
-					<p className="text-base font-semibold text-neutral-900">
+					<p className="text-base font-semibold text-[color:var(--ember-ink)]">
 						{display.title}
 					</p>
-					<p className="mt-1 text-sm text-neutral-500">{display.sub}</p>
+					<p className="mt-1 text-sm text-[color:var(--ember-warm-gray)]">{display.sub}</p>
 				</div>
 
 				{!sharing.sharedAt ? (
@@ -89,10 +89,10 @@ export default function SharePage() {
 						<button
 							type="button"
 							onClick={() => router.push(`/r/${token}/share/when`)}
-							className="w-full flex items-center justify-between gap-3 rounded-2xl bg-white px-5 py-4 text-base text-neutral-900 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
+							className="w-full flex items-center justify-between gap-3 rounded-2xl bg-[color:var(--ember-card)] px-5 py-4 text-base text-[color:var(--ember-ink)] transition-colors hover:bg-[color:var(--ember-cream-light)] active:bg-neutral-100"
 						>
 							<span>Change how this is shared</span>
-							<span className="text-neutral-400" aria-hidden="true">
+							<span className="text-[color:var(--ember-soft-gray)]" aria-hidden="true">
 								›
 							</span>
 						</button>
@@ -100,25 +100,25 @@ export default function SharePage() {
 						<button
 							type="button"
 							onClick={() => setConfirmOpen(true)}
-							className="mt-8 w-full rounded-2xl bg-neutral-900 py-4 text-base font-medium text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700"
+							className="mt-8 ember-cta"
 						>
 							Share what I've written so far
 						</button>
 
-						<p className="mt-4 text-center text-sm text-neutral-500 leading-relaxed">
+						<p className="mt-4 text-center text-sm text-[color:var(--ember-warm-gray)] leading-relaxed">
 							Sharing is one-time — your journal will be archived afterwards.
 							You'll always be able to read it.
 						</p>
 					</>
 				) : (
-					<div className="mt-2 rounded-2xl bg-white px-5 py-5">
+					<div className="mt-2 rounded-2xl bg-[color:var(--ember-card)] px-5 py-5">
 						<p
 							className="text-[10px] font-medium tracking-[0.18em] uppercase mb-2"
-							style={{ color: "#B8693E" }}
+							style={{ color: "var(--ember-terracotta)" }}
 						>
 							Archived
 						</p>
-						<p className="text-base font-semibold text-neutral-900 mb-1">
+						<p className="text-base font-semibold text-[color:var(--ember-ink)] mb-1">
 							Shared with {giver.name} on{" "}
 							{new Intl.DateTimeFormat("en-US", {
 								month: "long",
@@ -126,7 +126,7 @@ export default function SharePage() {
 								year: "numeric",
 							}).format(new Date(sharing.sharedAt))}
 						</p>
-						<p className="text-sm text-neutral-500 leading-relaxed">
+						<p className="text-sm text-[color:var(--ember-warm-gray)] leading-relaxed">
 							{typeof sharing.lastSharedSnapshotCount === "number" &&
 								`${sharing.lastSharedSnapshotCount} ${sharing.lastSharedSnapshotCount === 1 ? "entry" : "entries"} sent. `}
 							Your journal is read-only now.
@@ -171,20 +171,20 @@ function ShareConfirmDialog({
 			aria-labelledby="share-confirm-title"
 			className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6"
 		>
-			<div className="w-full max-w-sm rounded-3xl bg-white px-6 py-7 text-center shadow-xl">
+			<div className="w-full max-w-sm rounded-3xl bg-[color:var(--ember-card)] px-6 py-7 text-center shadow-xl">
 				<p
 					className="text-[11px] font-medium tracking-[0.22em] uppercase mb-3"
-					style={{ color: "#B8693E" }}
+					style={{ color: "var(--ember-terracotta)" }}
 				>
 					Sharing
 				</p>
 				<h2
 					id="share-confirm-title"
-					className="text-xl font-semibold text-neutral-900 mb-3"
+					className="text-xl font-semibold text-[color:var(--ember-ink)] mb-3"
 				>
 					Share with {giverName} now?
 				</h2>
-				<p className="text-sm text-neutral-600 leading-relaxed mb-6">
+				<p className="text-sm text-[color:var(--ember-warm-gray)] leading-relaxed mb-6">
 					Everything you've written, your voice notes, and your photos will be
 					released to {object}. This can't be undone.
 				</p>
@@ -193,7 +193,7 @@ function ShareConfirmDialog({
 						type="button"
 						onClick={onConfirm}
 						disabled={sharing}
-						className="w-full rounded-2xl bg-neutral-900 py-3.5 text-base font-medium text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700 disabled:opacity-60"
+						className="ember-cta"
 					>
 						{sharing ? "Sharing…" : "Yes, share it"}
 					</button>
@@ -201,7 +201,7 @@ function ShareConfirmDialog({
 						type="button"
 						onClick={onCancel}
 						disabled={sharing}
-						className="text-sm text-neutral-700 underline underline-offset-2 hover:text-neutral-900 transition-colors py-1 disabled:opacity-60"
+						className="text-sm text-[color:var(--ember-warm-gray)] underline underline-offset-2 hover:text-[color:var(--ember-ink)] transition-colors py-1 disabled:opacity-60"
 					>
 						Not yet
 					</button>

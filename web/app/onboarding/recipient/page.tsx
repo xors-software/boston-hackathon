@@ -112,13 +112,13 @@ export default function RecipientPage() {
 	}
 
 	return (
-		<main className="min-h-dvh bg-white">
+		<main className="min-h-dvh bg-[color:var(--ember-card)]">
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-12 sm:px-8">
 				<div className="flex items-center justify-between">
 					<button
 						type="button"
 						onClick={() => router.back()}
-						className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-neutral-700 transition-colors hover:text-neutral-900"
+						className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:text-[color:var(--ember-ink)]"
 					>
 						<svg
 							aria-hidden="true"
@@ -137,31 +137,31 @@ export default function RecipientPage() {
 					<button
 						type="button"
 						onClick={goSkip}
-						className="py-2 text-base text-neutral-500 transition-colors hover:text-neutral-700"
+						className="py-2 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:text-[color:var(--ember-warm-gray)]"
 					>
 						Skip
 					</button>
 				</div>
 
 				<header className="mt-6 mb-8">
-					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-neutral-900">
+					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)]">
 						Tell us a little about them.
 					</h1>
-					<p className="text-base text-neutral-500 leading-relaxed">
+					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						A phrase they say. A way they laugh. Something only you'd know.
 					</p>
 				</header>
 
-				<div className="relative rounded-2xl border border-neutral-200 bg-white focus-within:border-neutral-900 transition-colors">
+				<div className="relative rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] focus-within:border-neutral-900 transition-colors">
 					<textarea
 						value={about}
 						onChange={(e) => setAbout(e.target.value.slice(0, MAX_CHARS))}
 						placeholder={transcribing ? "Transcribing…" : "Start typing..."}
 						rows={6}
 						disabled={transcribing}
-						className="block w-full resize-none rounded-2xl bg-transparent px-4 pt-4 pb-12 text-base text-neutral-900 placeholder:text-neutral-400 outline-none disabled:opacity-60"
+						className="block w-full resize-none rounded-2xl bg-transparent px-4 pt-4 pb-12 text-base text-[color:var(--ember-ink)] placeholder:text-[color:var(--ember-soft-gray)] outline-none disabled:opacity-60"
 					/>
-					<div className="pointer-events-none absolute left-4 bottom-3 text-sm text-neutral-400">
+					<div className="pointer-events-none absolute left-4 bottom-3 text-sm text-[color:var(--ember-soft-gray)]">
 						{about.length} / {MAX_CHARS}
 					</div>
 					<button
@@ -172,12 +172,12 @@ export default function RecipientPage() {
 						className={`absolute right-3 bottom-3 flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${
 							recording
 								? "border-red-500 bg-red-500"
-								: "border-neutral-300 bg-white hover:bg-neutral-100"
+								: "border-[color:var(--ember-divider)] bg-[color:var(--ember-card)] hover:bg-neutral-100"
 						} disabled:opacity-50 disabled:cursor-not-allowed`}
 					>
 						{transcribing ? (
 							<svg
-								className="h-4 w-4 animate-spin text-neutral-500"
+								className="h-4 w-4 animate-spin text-[color:var(--ember-warm-gray)]"
 								viewBox="0 0 24 24"
 								fill="none"
 							>
@@ -198,13 +198,13 @@ export default function RecipientPage() {
 							</svg>
 						) : (
 							<span
-								className={`block h-3 w-3 rounded-full ${recording ? "bg-white animate-pulse" : "bg-neutral-700"}`}
+								className={`block h-3 w-3 rounded-full ${recording ? "bg-[color:var(--ember-card)] animate-pulse" : "bg-neutral-700"}`}
 							/>
 						)}
 					</button>
 				</div>
 
-				<p className="mt-4 flex items-start gap-1.5 text-sm text-neutral-500">
+				<p className="mt-4 flex items-start gap-1.5 text-sm text-[color:var(--ember-warm-gray)]">
 					<svg
 						aria-hidden="true"
 						viewBox="0 0 24 24"
@@ -228,7 +228,7 @@ export default function RecipientPage() {
 					<button
 						type="button"
 						onClick={goNext}
-						className="w-full rounded-2xl bg-neutral-900 py-4 text-base font-medium text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700"
+						className="ember-cta"
 					>
 						Continue
 					</button>
@@ -236,7 +236,7 @@ export default function RecipientPage() {
 					<button
 						type="button"
 						onClick={goAiHelp}
-						className="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-neutral-200 bg-white py-4 text-base font-medium text-neutral-900 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
+						className="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-card)] py-4 text-base font-medium text-[color:var(--ember-ink)] transition-colors hover:bg-[color:var(--ember-cream-light)] active:bg-neutral-100"
 					>
 						<svg
 							aria-hidden="true"
@@ -254,7 +254,7 @@ export default function RecipientPage() {
 					<button
 						type="button"
 						onClick={goSkip}
-						className="text-sm text-neutral-500 underline underline-offset-2 transition-colors hover:text-neutral-700"
+						className="text-sm text-[color:var(--ember-warm-gray)] underline underline-offset-2 transition-colors hover:text-[color:var(--ember-warm-gray)]"
 					>
 						Skip for now
 					</button>

@@ -46,34 +46,48 @@ export default function ParentAccountPage() {
 	return (
 		<main
 			className="min-h-dvh w-full"
-			style={{ backgroundColor: "#F1ECE2" }}
+			style={{ backgroundColor: "var(--ember-cream)" }}
 		>
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-12 sm:px-8">
 				<button
 					type="button"
 					onClick={() => router.back()}
-					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-neutral-700 transition-colors hover:text-neutral-900"
+					className="-ml-1 inline-flex items-center gap-1.5 py-2 text-base transition-opacity hover:opacity-80"
+					style={{ color: "var(--ember-warm-gray)" }}
 				>
 					<svg
 						aria-hidden="true"
 						viewBox="0 0 24 24"
 						fill="none"
 						stroke="currentColor"
-						strokeWidth="2"
+						strokeWidth="1.75"
 						strokeLinecap="round"
 						strokeLinejoin="round"
 						className="h-4 w-4"
 					>
 						<polyline points="15 6 9 12 15 18" />
 					</svg>
-					Back
+					<span className="font-serif italic">Back</span>
 				</button>
 
 				<header className="mt-6 mb-8">
-					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-neutral-900">
-						Save your space.
+					<h1
+						className="mb-3 font-serif text-[40px] sm:text-[44px] leading-[1.05] tracking-tight"
+						style={{ color: "var(--ember-ink)" }}
+					>
+						Save your{" "}
+						<span
+							className="italic"
+							style={{ color: "var(--ember-terracotta)" }}
+						>
+							space
+						</span>
+						.
 					</h1>
-					<p className="text-base text-neutral-600 leading-relaxed">
+					<p
+						className="text-base leading-relaxed"
+						style={{ color: "var(--ember-warm-gray)" }}
+					>
 						A quick account so you can come back whenever you want, on any
 						device. Nothing is shared until you say so.
 					</p>
@@ -81,26 +95,41 @@ export default function ParentAccountPage() {
 
 				<form onSubmit={submit} className="flex flex-col gap-5" noValidate>
 					<label className="flex flex-col gap-2">
-						<span className="text-sm font-medium text-neutral-800">Email</span>
+						<span
+							className="text-[11px] font-medium tracking-[0.22em] uppercase"
+							style={{ color: "var(--ember-warm-gray)" }}
+						>
+							Email
+						</span>
 						<input
 							type="email"
 							inputMode="email"
 							autoComplete="email"
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
-							className={`w-full rounded-xl border bg-white px-4 py-3.5 text-base text-neutral-900 placeholder:text-neutral-400 outline-none transition-colors focus:border-neutral-900 ${
-								touched && !emailValid
-									? "border-red-400"
-									: "border-neutral-200"
-							}`}
+							className="w-full rounded-2xl px-4 py-3.5 text-base outline-none transition-colors"
+							style={{
+								backgroundColor: "var(--ember-cream-light)",
+								color: "var(--ember-ink)",
+								border:
+									touched && !emailValid
+										? "1px solid var(--ember-terracotta)"
+										: "1px solid var(--ember-divider)",
+							}}
 						/>
-						<span className="text-xs text-neutral-500">
+						<span
+							className="text-xs font-serif italic"
+							style={{ color: "var(--ember-warm-gray)" }}
+						>
 							Pre-filled from the invitation
 						</span>
 					</label>
 
 					<label className="flex flex-col gap-2">
-						<span className="text-sm font-medium text-neutral-800">
+						<span
+							className="text-[11px] font-medium tracking-[0.22em] uppercase"
+							style={{ color: "var(--ember-warm-gray)" }}
+						>
 							Create a password
 						</span>
 						<input
@@ -109,28 +138,50 @@ export default function ParentAccountPage() {
 							placeholder="At least 8 characters"
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
-							className={`w-full rounded-xl border bg-white px-4 py-3.5 text-base text-neutral-900 placeholder:text-neutral-400 outline-none transition-colors focus:border-neutral-900 ${
-								touched && !passwordValid
-									? "border-red-400"
-									: "border-neutral-200"
-							}`}
+							className="w-full rounded-2xl px-4 py-3.5 text-base outline-none transition-colors placeholder:italic"
+							style={{
+								backgroundColor: "var(--ember-cream-light)",
+								color: "var(--ember-ink)",
+								border:
+									touched && !passwordValid
+										? "1px solid var(--ember-terracotta)"
+										: "1px solid var(--ember-divider)",
+							}}
 						/>
 					</label>
 
 					<button
 						type="submit"
 						disabled={touched && !canSubmit}
-						className="mt-2 w-full rounded-2xl bg-neutral-900 py-4 text-base font-medium text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
+						className="ember-cta ember-cta-with-arrow mt-2"
 					>
-						Create account
+						<span>Create account</span>
+						<span aria-hidden="true" className="ember-cta-arrow">
+							<svg
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="1.75"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								className="h-4 w-4"
+							>
+								<line x1="5" y1="12" x2="19" y2="12" />
+								<polyline points="13 6 19 12 13 18" />
+							</svg>
+						</span>
 					</button>
 				</form>
 
-				<p className="mt-6 text-center text-sm text-neutral-500">
+				<p
+					className="mt-6 text-center text-sm font-serif italic"
+					style={{ color: "var(--ember-warm-gray)" }}
+				>
 					By continuing you agree to our{" "}
 					<a
 						href="#terms"
-						className="underline underline-offset-2 hover:text-neutral-700"
+						className="underline underline-offset-2 hover:opacity-80"
+						style={{ color: "var(--ember-terracotta)" }}
 					>
 						Terms & Privacy
 					</a>

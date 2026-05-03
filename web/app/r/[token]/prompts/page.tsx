@@ -54,24 +54,24 @@ export default function PromptsPage() {
 	if (!hydrated) return null
 
 	return (
-		<main className="min-h-dvh w-full bg-white">
+		<main className="min-h-dvh w-full bg-[color:var(--ember-card)]">
 			<div className="mx-auto w-full max-w-md pb-32">
 				<header
 					className="px-6 pt-6 pb-6 sm:px-8"
-					style={{ backgroundColor: "#F1ECE2" }}
+					style={{ backgroundColor: "var(--ember-cream)" }}
 				>
-					<p className="text-[11px] font-medium tracking-[0.18em] uppercase text-neutral-500 mb-2">
+					<p className="text-[11px] font-medium tracking-[0.18em] uppercase text-[color:var(--ember-warm-gray)] mb-2">
 						Inspiration
 					</p>
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-neutral-900 mb-1">
+					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)] mb-1">
 						Prompts to gently nudge you
 					</h1>
-					<p className="text-base text-neutral-600">
+					<p className="text-base text-[color:var(--ember-warm-gray)]">
 						Use them, ignore them.
 					</p>
 				</header>
 
-				<div className="px-6 sm:px-8 border-b border-neutral-200">
+				<div className="px-6 sm:px-8 border-b border-[color:var(--ember-divider)]">
 					<div className="flex items-center gap-6 py-3">
 						{FILTERS.map((f) => {
 							const isActive = filter === f.id
@@ -82,16 +82,16 @@ export default function PromptsPage() {
 									onClick={() => setFilter(f.id)}
 									className={`relative pb-2 -mb-3 text-base transition-colors ${
 										isActive
-											? "text-neutral-900"
-											: "text-neutral-500 hover:text-neutral-700"
+											? "text-[color:var(--ember-ink)]"
+											: "text-[color:var(--ember-warm-gray)] hover:text-[color:var(--ember-warm-gray)]"
 									}`}
-									style={isActive ? { color: "#B8693E" } : undefined}
+									style={isActive ? { color: "var(--ember-terracotta)" } : undefined}
 								>
 									{f.label}
 									{isActive && (
 										<span
 											className="absolute left-0 right-0 -bottom-px h-[2px]"
-											style={{ backgroundColor: "#B8693E" }}
+											style={{ backgroundColor: "var(--ember-terracotta)" }}
 										/>
 									)}
 								</button>
@@ -103,7 +103,7 @@ export default function PromptsPage() {
 				{archived && (
 					<div
 						className="px-6 sm:px-8 py-3 text-sm"
-						style={{ backgroundColor: "#F1ECE2", color: "#B8693E" }}
+						style={{ backgroundColor: "var(--ember-cream)", color: "var(--ember-terracotta)" }}
 					>
 						Your journal is shared. Prompts are read-only now.
 					</div>
@@ -128,7 +128,7 @@ export default function PromptsPage() {
 					))}
 
 					{visible.unused.length === 0 && visible.used.length === 0 && (
-						<li className="px-6 py-10 text-center text-sm text-neutral-500">
+						<li className="px-6 py-10 text-center text-sm text-[color:var(--ember-warm-gray)]">
 							{filter === "used"
 								? "No prompts written about yet."
 								: "No prompts available."}
@@ -158,14 +158,14 @@ function PromptRow({
 				onClick={onOpen}
 				disabled={used}
 				className={`w-full flex items-start gap-3 px-6 py-4 text-left transition-colors ${
-					used ? "cursor-default" : "hover:bg-neutral-50 active:bg-neutral-100"
+					used ? "cursor-default" : "hover:bg-[color:var(--ember-cream-light)] active:bg-neutral-100"
 				}`}
 			>
 				<span
 					className={`shrink-0 mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border ${
-						used ? "border-transparent" : "border-neutral-300"
+						used ? "border-transparent" : "border-[color:var(--ember-divider)]"
 					}`}
-					style={used ? { color: "#B8693E" } : undefined}
+					style={used ? { color: "var(--ember-terracotta)" } : undefined}
 				>
 					{used && (
 						<svg
@@ -185,14 +185,14 @@ function PromptRow({
 				<div className="flex-1 min-w-0">
 					<p
 						className={`text-base italic leading-snug ${
-							used ? "text-neutral-400" : "text-neutral-900"
+							used ? "text-[color:var(--ember-soft-gray)]" : "text-[color:var(--ember-ink)]"
 						}`}
 					>
 						"{prompt.text}"
 					</p>
 					<p
 						className={`mt-1.5 text-[11px] font-medium tracking-[0.18em] uppercase ${
-							used ? "text-neutral-400" : "text-neutral-500"
+							used ? "text-[color:var(--ember-soft-gray)]" : "text-[color:var(--ember-warm-gray)]"
 						}`}
 					>
 						{used ? "Written about" : "Tap to write"}

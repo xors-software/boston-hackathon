@@ -146,13 +146,13 @@ export default function VoicePage() {
 	return (
 		<main
 			className="min-h-dvh w-full flex flex-col"
-			style={{ backgroundColor: "#F1ECE2" }}
+			style={{ backgroundColor: "var(--ember-cream)" }}
 		>
 			<div className="mx-auto w-full max-w-md flex-1 flex flex-col px-6 pt-6 pb-6 sm:px-8">
 				<button
 					type="button"
 					onClick={() => router.back()}
-					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-neutral-700 transition-colors hover:text-neutral-900"
+					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:text-[color:var(--ember-ink)]"
 				>
 					<svg
 						aria-hidden="true"
@@ -172,14 +172,14 @@ export default function VoicePage() {
 				<header className="mt-4 mb-6">
 					<p
 						className="text-[11px] font-medium tracking-[0.22em] uppercase mb-2"
-						style={{ color: "#B8693E" }}
+						style={{ color: "var(--ember-terracotta)" }}
 					>
 						Voice note
 					</p>
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-neutral-900 mb-2">
+					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)] mb-2">
 						{showReview ? "Sound right?" : "Press record. Take your time."}
 					</h1>
-					<p className="text-base text-neutral-600 leading-relaxed">
+					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						{showReview
 							? "We transcribed what you said. Edit if you'd like, then save it to your journal."
 							: "Speak whenever you're ready. We'll write it down for you."}
@@ -203,7 +203,7 @@ export default function VoicePage() {
 							}`}
 						>
 							{recording ? (
-								<span className="block h-10 w-10 rounded-md bg-white" />
+								<span className="block h-10 w-10 rounded-md bg-[color:var(--ember-card)]" />
 							) : (
 								<svg
 									viewBox="0 0 24 24"
@@ -219,10 +219,10 @@ export default function VoicePage() {
 								</svg>
 							)}
 						</button>
-						<p className="text-2xl font-mono tabular-nums text-neutral-900">
+						<p className="text-2xl font-mono tabular-nums text-[color:var(--ember-ink)]">
 							{formatTimer(duration)}
 						</p>
-						<p className="text-sm text-neutral-500">
+						<p className="text-sm text-[color:var(--ember-warm-gray)]">
 							{recording ? "Tap to stop" : "Tap the mic to start"}
 						</p>
 					</div>
@@ -231,7 +231,7 @@ export default function VoicePage() {
 				{transcribing && (
 					<div className="flex-1 flex flex-col items-center justify-center gap-4">
 						<svg
-							className="h-10 w-10 animate-spin text-neutral-500"
+							className="h-10 w-10 animate-spin text-[color:var(--ember-warm-gray)]"
 							viewBox="0 0 24 24"
 							fill="none"
 						>
@@ -250,18 +250,18 @@ export default function VoicePage() {
 								strokeLinecap="round"
 							/>
 						</svg>
-						<p className="text-sm text-neutral-500">Transcribing…</p>
+						<p className="text-sm text-[color:var(--ember-warm-gray)]">Transcribing…</p>
 					</div>
 				)}
 
 				{showReview && (
 					<div className="flex-1 flex flex-col gap-4">
-						<div className="rounded-2xl bg-white px-4 py-3 text-sm text-neutral-500 flex items-center justify-between">
+						<div className="rounded-2xl bg-[color:var(--ember-input)] px-4 py-3 text-sm text-[color:var(--ember-warm-gray)] flex items-center justify-between">
 							<span>{formatTimer(lastDurationRef.current || duration)}</span>
 							<button
 								type="button"
 								onClick={discard}
-								className="text-sm text-neutral-500 underline underline-offset-2 hover:text-neutral-700"
+								className="text-sm text-[color:var(--ember-warm-gray)] underline underline-offset-2 hover:text-[color:var(--ember-warm-gray)]"
 							>
 								Re-record
 							</button>
@@ -271,14 +271,14 @@ export default function VoicePage() {
 							value={transcript}
 							onChange={(e) => setTranscript(e.target.value)}
 							rows={10}
-							className="w-full flex-1 resize-none rounded-2xl bg-white border border-neutral-200 px-4 py-4 text-base text-neutral-900 outline-none focus:border-neutral-900 transition-colors"
+							className="w-full flex-1 resize-none rounded-2xl bg-[color:var(--ember-input)] border border-[color:var(--ember-divider)] px-4 py-4 text-base text-[color:var(--ember-ink)] outline-none focus:border-neutral-900 transition-colors"
 						/>
 
 						<button
 							type="button"
 							onClick={save}
 							disabled={saving || !transcript.trim()}
-							className="w-full rounded-2xl bg-neutral-900 py-4 text-base font-medium text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
+							className="ember-cta"
 						>
 							{saving ? "Saving…" : "Save voice note"}
 						</button>

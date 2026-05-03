@@ -18,15 +18,15 @@ export default function OnboardingPage() {
 			style={{
 				backgroundColor: "#FBFAF7",
 				backgroundImage:
-					"radial-gradient(circle, #D9D5CC 1px, transparent 1px)",
+					"radial-gradient(circle, var(--ember-divider) 1px, transparent 1px)",
 				backgroundSize: "18px 18px",
 			}}
 		>
 			<section
 				className="w-full max-w-md min-h-[640px] rounded-3xl flex flex-col px-8 py-12 sm:px-12 sm:py-16"
-				style={{ backgroundColor: "#F1ECE2" }}
+				style={{ backgroundColor: "var(--ember-cream)" }}
 			>
-				<div className="flex-1 flex flex-col items-center justify-center text-center text-neutral-900">
+				<div className="flex-1 flex flex-col items-center justify-center text-center text-[color:var(--ember-ink)]">
 					<h1 className="text-5xl sm:text-6xl font-medium tracking-tight mb-12 lowercase">
 						welcome
 					</h1>
@@ -44,7 +44,7 @@ export default function OnboardingPage() {
 				<button
 					type="button"
 					onClick={begin}
-					className="mt-10 w-full rounded-full bg-neutral-900 text-white py-4 text-base font-medium tracking-tight transition-colors hover:bg-neutral-800 active:bg-neutral-700"
+					className="ember-cta mt-10"
 				>
 					begin
 				</button>

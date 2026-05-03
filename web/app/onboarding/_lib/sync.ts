@@ -43,13 +43,23 @@ type FrontPerson = {
 type FrontCustomQuestion = {
 	id: string
 	text: string
-	photoDataUrl?: string
 	preface?: string
+	// Once a question lands on the server we keep its returned id here
+	// so re-syncs don't keep recreating it. Photos are uploaded directly
+	// from the write page (multipart → S3) and stored as URLs server-side,
+	// never inlined into the local snapshot.
+	serverId?: string
+	photoUrl?: string
+}
+type FrontAiQuestion = {
+	id: string
+	text: string
 }
 type FrontQuestionsState = {
 	selectedIds: string[]
 	custom: FrontCustomQuestion[]
 	edits?: Record<string, string>
+	ai?: FrontAiQuestion[]
 }
 
 const VALID_INTENTS: ReadonlySet<GiftIntent> = new Set([
@@ -131,15 +141,28 @@ async function syncQuestions(
 	}
 
 	const customById = new Map(qs.custom.map((c) => [c.id, c]))
+	const aiById = new Map((qs.ai ?? []).map((a) => [a.id, a]))
 	for (const id of qs.selectedIds) {
 		const custom = customById.get(id)
+		const ai = aiById.get(id)
 		if (custom) {
+			// Photos were uploaded directly from the write page; we forward
+			// the resulting URL on re-create so the photo survives the
+			// wipe-and-recreate sync that runs at send-time.
 			await unwrap(
 				api.gifts({ id: giftId }).questions.post({
 					source: "custom",
 					text: custom.text,
 					preface: custom.preface ?? null,
-					photoDataUrl: custom.photoDataUrl ?? null,
+					photoUrl: custom.photoUrl ?? null,
+				}),
+			)
+		} else if (ai) {
+			const editedText = qs.edits?.[id] ?? ai.text
+			await unwrap(
+				api.gifts({ id: giftId }).questions.post({
+					source: "ai",
+					text: editedText,
 				}),
 			)
 		} else {

@@ -10,7 +10,7 @@ export const questionSchema = t.Object({
 	source: t.Union([t.Literal("library"), t.Literal("custom"), t.Literal("ai")]),
 	templateId: t.Union([t.String(), t.Null()]),
 	text: t.String(),
-	photoDataUrl: t.Union([t.String(), t.Null()]),
+	photoUrl: t.Union([t.String(), t.Null()]),
 	preface: t.Union([t.String(), t.Null()]),
 	position: t.Number(),
 	createdAt: t.String(),

@@ -136,12 +136,12 @@ export default function SendPage() {
 	}
 
 	return (
-		<main className="min-h-dvh bg-white">
+		<main className="min-h-dvh bg-[color:var(--ember-card)]">
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-12 sm:px-8">
 				<button
 					type="button"
 					onClick={() => router.back()}
-					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-neutral-700 transition-colors hover:text-neutral-900"
+					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:text-[color:var(--ember-ink)]"
 				>
 					<svg
 						aria-hidden="true"
@@ -159,15 +159,15 @@ export default function SendPage() {
 				</button>
 
 				<header className="mt-6 mb-6">
-					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-neutral-900">
+					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)]">
 						Ready to send.
 					</h1>
-					<p className="text-base text-neutral-500 leading-relaxed">
+					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						Here's what arrives in their inbox.
 					</p>
 				</header>
 
-				<div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-6 py-8 text-center mb-4">
+				<div className="rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-cream-light)] px-6 py-8 text-center mb-4">
 					<div className="flex justify-center mb-4">
 						<svg
 							aria-hidden="true"
@@ -177,21 +177,21 @@ export default function SendPage() {
 							strokeWidth="1.5"
 							strokeLinecap="round"
 							strokeLinejoin="round"
-							className="h-8 w-8 text-neutral-500"
+							className="h-8 w-8 text-[color:var(--ember-warm-gray)]"
 						>
 							<rect x="3" y="5" width="18" height="14" rx="2" />
 							<polyline points="3 7 12 13 21 7" />
 						</svg>
 					</div>
-					<div className="text-base font-semibold text-neutral-900 mb-2">
+					<div className="text-base font-semibold text-[color:var(--ember-ink)] mb-2">
 						Preview — email invitation
 					</div>
-					<p className="text-sm text-neutral-600 leading-relaxed">
+					<p className="text-sm text-[color:var(--ember-warm-gray)] leading-relaxed">
 						{previewLine}
 					</p>
 				</div>
 
-				<div className="rounded-2xl border border-neutral-200 bg-white divide-y divide-neutral-200">
+				<div className="rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-card)] divide-y divide-neutral-200">
 					<SummaryRow
 						label="For"
 						value={recipientName}
@@ -201,7 +201,7 @@ export default function SendPage() {
 						{editingFor && (
 							<form onSubmit={saveEditFor} className="mt-3 flex flex-col gap-3">
 								<label className="flex flex-col gap-1.5">
-									<span className="text-xs font-medium text-neutral-600">
+									<span className="text-xs font-medium text-[color:var(--ember-warm-gray)]">
 										Name
 									</span>
 									<input
@@ -209,12 +209,12 @@ export default function SendPage() {
 										value={draftName}
 										onChange={(e) => setDraftName(e.target.value)}
 										autoFocus
-										className="rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-base text-neutral-900 outline-none focus:border-neutral-900 transition-colors"
+										className="rounded-xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] px-3 py-2.5 text-base text-[color:var(--ember-ink)] outline-none focus:border-neutral-900 transition-colors"
 									/>
 								</label>
 								{needsEmail && (
 									<label className="flex flex-col gap-1.5">
-										<span className="text-xs font-medium text-neutral-600">
+										<span className="text-xs font-medium text-[color:var(--ember-warm-gray)]">
 											Email
 										</span>
 										<input
@@ -223,7 +223,7 @@ export default function SendPage() {
 											placeholder="them@example.com"
 											value={draftEmail}
 											onChange={(e) => setDraftEmail(e.target.value)}
-											className="rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-base text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-neutral-900 transition-colors"
+											className="rounded-xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] px-3 py-2.5 text-base text-[color:var(--ember-ink)] placeholder:text-[color:var(--ember-soft-gray)] outline-none focus:border-neutral-900 transition-colors"
 										/>
 									</label>
 								)}
@@ -231,13 +231,13 @@ export default function SendPage() {
 									<button
 										type="button"
 										onClick={cancelEditFor}
-										className="px-3 py-2 text-sm text-neutral-500 hover:text-neutral-700 transition-colors"
+										className="px-3 py-2 text-sm text-[color:var(--ember-warm-gray)] hover:text-[color:var(--ember-warm-gray)] transition-colors"
 									>
 										Cancel
 									</button>
 									<button
 										type="submit"
-										className="rounded-xl bg-neutral-900 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700"
+										className="rounded-xl bg-[color:var(--ember-ink)] px-5 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 active:opacity-80"
 									>
 										Save
 									</button>
@@ -258,7 +258,7 @@ export default function SendPage() {
 				</div>
 
 				{needsEmail && !emailValid && (
-					<p className="mt-3 text-sm text-neutral-500">
+					<p className="mt-3 text-sm text-[color:var(--ember-warm-gray)]">
 						Add {labels.possessive} email above to send.
 					</p>
 				)}
@@ -274,14 +274,14 @@ export default function SendPage() {
 						type="button"
 						onClick={() => setShowConfirm(true)}
 						disabled={!canSend}
-						className="w-full rounded-2xl bg-neutral-900 py-4 text-base font-medium text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
+						className="ember-cta"
 					>
 						Send it
 					</button>
 					<button
 						type="button"
 						onClick={goSaveLater}
-						className="text-center text-sm text-neutral-700 underline underline-offset-2 hover:text-neutral-900 transition-colors py-2"
+						className="text-center text-sm text-[color:var(--ember-warm-gray)] underline underline-offset-2 hover:text-[color:var(--ember-ink)] transition-colors py-2"
 					>
 						Save for later
 					</button>
@@ -317,16 +317,16 @@ function SummaryRow({
 	return (
 		<div className="px-5 py-4">
 			<div className="flex items-center justify-between gap-3">
-				<span className="text-sm text-neutral-500">{label}</span>
+				<span className="text-sm text-[color:var(--ember-warm-gray)]">{label}</span>
 				<div className="flex items-center gap-3">
-					<span className="text-base font-semibold text-neutral-900">
+					<span className="text-base font-semibold text-[color:var(--ember-ink)]">
 						{value}
 					</span>
 					<button
 						type="button"
 						onClick={onEdit}
 						aria-expanded={expanded}
-						className="text-sm text-neutral-700 underline underline-offset-2 hover:text-neutral-900 transition-colors"
+						className="text-sm text-[color:var(--ember-warm-gray)] underline underline-offset-2 hover:text-[color:var(--ember-ink)] transition-colors"
 					>
 						edit
 					</button>
@@ -357,14 +357,14 @@ function ConfirmDialog({
 			aria-labelledby="send-confirm-title"
 			className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6"
 		>
-			<div className="w-full max-w-sm rounded-3xl bg-white px-6 py-7 text-center shadow-xl">
+			<div className="w-full max-w-sm rounded-3xl bg-[color:var(--ember-card)] px-6 py-7 text-center shadow-xl">
 				<h2
 					id="send-confirm-title"
-					className="text-xl font-semibold text-neutral-900 mb-3"
+					className="text-xl font-semibold text-[color:var(--ember-ink)] mb-3"
 				>
 					Send this gift to {recipientName}?
 				</h2>
-				<p className="text-sm text-neutral-500 leading-relaxed mb-6">
+				<p className="text-sm text-[color:var(--ember-warm-gray)] leading-relaxed mb-6">
 					{capitalize(subject)}'ll get an invitation by email. You can keep
 					adding questions after {subject} opens it.
 				</p>
@@ -373,7 +373,7 @@ function ConfirmDialog({
 						type="button"
 						onClick={onConfirm}
 						disabled={sending}
-						className="w-full rounded-2xl bg-neutral-900 py-3.5 text-base font-medium text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700 disabled:opacity-60"
+						className="ember-cta"
 					>
 						{sending ? "Sending…" : "Send"}
 					</button>
@@ -381,7 +381,7 @@ function ConfirmDialog({
 						type="button"
 						onClick={onCancel}
 						disabled={sending}
-						className="text-center text-sm text-neutral-700 underline underline-offset-2 hover:text-neutral-900 transition-colors py-1 disabled:opacity-60"
+						className="text-center text-sm text-[color:var(--ember-warm-gray)] underline underline-offset-2 hover:text-[color:var(--ember-ink)] transition-colors py-1 disabled:opacity-60"
 					>
 						Cancel
 					</button>

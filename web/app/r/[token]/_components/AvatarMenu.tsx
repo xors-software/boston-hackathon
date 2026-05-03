@@ -11,7 +11,7 @@ type Props = {
 
 export function AvatarMenu({
 	initial,
-	bg = "#D9D5CC",
+	bg = "var(--ember-soft-gray)",
 	border = false,
 }: Props) {
 	const router = useRouter()
@@ -56,8 +56,8 @@ export function AvatarMenu({
 				aria-haspopup="menu"
 				aria-expanded={open}
 				aria-label="Account menu"
-				className={`h-9 w-9 rounded-full flex items-center justify-center text-sm font-medium text-neutral-700 transition-colors hover:opacity-90 ${
-					border ? "border border-neutral-300/60" : ""
+				className={`h-9 w-9 rounded-full flex items-center justify-center text-sm font-medium text-[color:var(--ember-warm-gray)] transition-colors hover:opacity-90 ${
+					border ? "border border-[color:var(--ember-divider)]/60" : ""
 				}`}
 				style={{ backgroundColor: bg }}
 			>
@@ -67,14 +67,14 @@ export function AvatarMenu({
 			{open && (
 				<div
 					role="menu"
-					className="absolute right-0 mt-2 w-44 rounded-2xl bg-white shadow-lg border border-neutral-200 overflow-hidden z-30"
+					className="absolute right-0 mt-2 w-44 rounded-2xl bg-[color:var(--ember-card)] shadow-lg border border-[color:var(--ember-divider)] overflow-hidden z-30"
 				>
 					<button
 						type="button"
 						role="menuitem"
 						onClick={signOut}
 						disabled={signingOut}
-						className="w-full text-left px-4 py-3 text-sm text-neutral-900 hover:bg-neutral-50 transition-colors disabled:opacity-60"
+						className="w-full text-left px-4 py-3 text-sm text-[color:var(--ember-ink)] hover:bg-[color:var(--ember-cream-light)] transition-colors disabled:opacity-60"
 					>
 						{signingOut ? "Signing out…" : "Sign out"}
 					</button>

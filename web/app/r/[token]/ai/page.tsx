@@ -185,14 +185,14 @@ export default function ParentAiChatPage() {
 	return (
 		<main
 			className="min-h-dvh w-full flex flex-col"
-			style={{ backgroundColor: "#F1ECE2" }}
+			style={{ backgroundColor: "var(--ember-cream)" }}
 		>
 			<div className="mx-auto w-full max-w-md flex-1 flex flex-col px-6 pt-6 pb-6 sm:px-8">
 				<div className="flex items-center justify-between">
 					<button
 						type="button"
 						onClick={() => router.back()}
-						className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-neutral-700 transition-colors hover:text-neutral-900"
+						className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:text-[color:var(--ember-ink)]"
 					>
 						<svg
 							aria-hidden="true"
@@ -212,7 +212,7 @@ export default function ParentAiChatPage() {
 						type="button"
 						onClick={saveAsEntry}
 						disabled={userTurns === 0 || saving || sending || archived}
-						className="text-sm font-medium text-neutral-900 underline underline-offset-2 transition-colors hover:text-neutral-700 disabled:text-neutral-400 disabled:no-underline disabled:cursor-not-allowed"
+						className="text-sm font-medium text-[color:var(--ember-ink)] underline underline-offset-2 transition-colors hover:text-[color:var(--ember-warm-gray)] disabled:text-[color:var(--ember-soft-gray)] disabled:no-underline disabled:cursor-not-allowed"
 					>
 						{saving ? "Saving…" : "Save as entry →"}
 					</button>
@@ -221,14 +221,14 @@ export default function ParentAiChatPage() {
 				<header className="mt-4 mb-5">
 					<p
 						className="text-[11px] font-medium tracking-[0.22em] uppercase mb-2"
-						style={{ color: "#B8693E" }}
+						style={{ color: "var(--ember-terracotta)" }}
 					>
 						Talk it through
 					</p>
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-neutral-900 mb-2">
+					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)] mb-2">
 						Tell me what's on your mind.
 					</h1>
-					<p className="text-sm text-neutral-600 leading-relaxed">
+					<p className="text-sm text-[color:var(--ember-warm-gray)] leading-relaxed">
 						I'll keep you company. When you're ready, save what you said as a
 						journal entry.
 					</p>
@@ -242,12 +242,12 @@ export default function ParentAiChatPage() {
 						m.role === "assistant" ? (
 							<div
 								key={i}
-								className="self-start max-w-[85%] rounded-2xl bg-white px-4 py-3"
+								className="self-start max-w-[85%] rounded-2xl bg-[color:var(--ember-card)] px-4 py-3"
 							>
-								<div className="text-[10px] font-medium uppercase tracking-[0.12em] text-neutral-400 mb-1">
+								<div className="text-[10px] font-medium uppercase tracking-[0.12em] text-[color:var(--ember-soft-gray)] mb-1">
 									Ember
 								</div>
-								<div className="text-base text-neutral-900 leading-relaxed whitespace-pre-wrap">
+								<div className="text-base text-[color:var(--ember-ink)] leading-relaxed whitespace-pre-wrap">
 									{m.content}
 								</div>
 							</div>
@@ -263,7 +263,7 @@ export default function ParentAiChatPage() {
 						),
 					)}
 					{sending && (
-						<div className="self-start text-sm italic text-neutral-400 pl-1">
+						<div className="self-start text-sm italic text-[color:var(--ember-soft-gray)] pl-1">
 							typing…
 						</div>
 					)}
@@ -273,7 +273,7 @@ export default function ParentAiChatPage() {
 
 				<form
 					onSubmit={onSubmit}
-					className="relative mt-4 rounded-2xl border border-neutral-300/60 bg-white focus-within:border-neutral-900 transition-colors"
+					className="relative mt-4 rounded-2xl border border-[color:var(--ember-divider)]/60 bg-[color:var(--ember-input)] focus-within:border-neutral-900 transition-colors"
 				>
 					<input
 						type="text"
@@ -283,7 +283,7 @@ export default function ParentAiChatPage() {
 							transcribing ? "Transcribing…" : "Type your reply..."
 						}
 						disabled={transcribing || saving}
-						className="block w-full rounded-2xl bg-transparent pl-4 pr-12 py-3.5 text-base text-neutral-900 placeholder:text-neutral-400 outline-none disabled:opacity-60"
+						className="block w-full rounded-2xl bg-transparent pl-4 pr-12 py-3.5 text-base text-[color:var(--ember-ink)] placeholder:text-[color:var(--ember-soft-gray)] outline-none disabled:opacity-60"
 					/>
 					<button
 						type="button"
@@ -293,12 +293,12 @@ export default function ParentAiChatPage() {
 						className={`absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full border transition-colors ${
 							recording
 								? "border-red-500 bg-red-500"
-								: "border-neutral-300 bg-white hover:bg-neutral-100"
+								: "border-[color:var(--ember-divider)] bg-[color:var(--ember-card)] hover:bg-neutral-100"
 						} disabled:opacity-50 disabled:cursor-not-allowed`}
 					>
 						{transcribing ? (
 							<svg
-								className="h-3.5 w-3.5 animate-spin text-neutral-500"
+								className="h-3.5 w-3.5 animate-spin text-[color:var(--ember-warm-gray)]"
 								viewBox="0 0 24 24"
 								fill="none"
 							>
@@ -320,7 +320,7 @@ export default function ParentAiChatPage() {
 						) : (
 							<span
 								className={`block h-2.5 w-2.5 rounded-full ${
-									recording ? "bg-white animate-pulse" : "bg-neutral-700"
+									recording ? "bg-[color:var(--ember-card)] animate-pulse" : "bg-neutral-700"
 								}`}
 							/>
 						)}
@@ -331,12 +331,12 @@ export default function ParentAiChatPage() {
 					type="button"
 					onClick={saveAsEntry}
 					disabled={userTurns === 0 || saving || sending || archived}
-					className="mt-3 w-full rounded-2xl bg-neutral-900 py-3.5 text-base font-medium text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
+					className="mt-3 ember-cta disabled:opacity-50 disabled:cursor-not-allowed"
 				>
 					{saving ? "Saving…" : "Save this as a journal entry"}
 				</button>
 
-				<p className="mt-3 text-center text-xs text-neutral-500">
+				<p className="mt-3 text-center text-xs text-[color:var(--ember-warm-gray)]">
 					Private to you. Nothing leaves until you say so.
 				</p>
 			</div>

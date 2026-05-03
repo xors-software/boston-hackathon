@@ -2,6 +2,16 @@
 
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import {
+	EmberAccentWord,
+	EmberAppHeader,
+	EmberBody,
+	EmberContainer,
+	EmberEyebrow,
+	EmberHeadline,
+	EmberNumberedCard,
+	EmberPage,
+} from "@/components/ember/EmberChrome"
 import { AvatarMenu } from "../_components/AvatarMenu"
 import { BottomTabs } from "../_components/BottomTabs"
 import {
@@ -14,15 +24,13 @@ import { useParentState } from "../_lib/state"
 
 const MOCK_RECIPIENT = { name: "Mom" }
 
-function formatDate(d: Date): string {
-	return new Intl.DateTimeFormat("en-US", {
-		weekday: "long",
-		month: "long",
-		day: "numeric",
-		year: "numeric",
-	})
-		.format(d)
-		.toUpperCase()
+function timeOfDayPhrase(d: Date): string {
+	const h = d.getHours()
+	const month = d.toLocaleString("en-US", { month: "long" }).toUpperCase()
+	if (h < 12) return `A MORNING IN ${month}`
+	if (h < 17) return `AN AFTERNOON IN ${month}`
+	if (h < 21) return `AN EVENING IN ${month}`
+	return `A NIGHT IN ${month}`
 }
 
 export default function ParentHomePage() {
@@ -38,7 +46,7 @@ export default function ParentHomePage() {
 		if (hydrated) markStep("home")
 	}, [hydrated])
 
-	const today = formatDate(new Date())
+	const todayPhrase = timeOfDayPhrase(new Date())
 	const entries = (state.data.entries as JournalEntry[] | undefined) ?? []
 	const initial =
 		(state.data.email as string | undefined)?.[0]?.toUpperCase() ??
@@ -53,142 +61,110 @@ export default function ParentHomePage() {
 			...draft,
 		}
 		update({ data: { entries: [entry, ...entries] } })
-		setComposerKey((k) => k + 1) // remount composer to clear inputs
+		setComposerKey((k) => k + 1)
 		setSavedToast(true)
 		setTimeout(() => setSavedToast(false), 2000)
 	}
 
 	return (
-		<main
-			className="min-h-dvh w-full"
-			style={{ backgroundColor: "#F1ECE2" }}
-		>
-			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-32 sm:px-8">
-				<div className="flex items-center justify-end">
-					<AvatarMenu initial={initial} />
+		<EmberPage>
+			<EmberContainer className="pt-2 pb-32">
+				<EmberAppHeader rightSlot={<AvatarMenu initial={initial} />} />
+
+				<div className="mt-6">
+					<EmberEyebrow>{todayPhrase}</EmberEyebrow>
 				</div>
 
-				<div className="mt-10">
-					<p className="text-[11px] font-medium tracking-[0.18em] uppercase text-neutral-500 mb-3">
-						{today}
-					</p>
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-snug text-neutral-900">
+				<div className="mt-4">
+					<EmberHeadline>
+						{archived ? (
+							<>Your journal is <EmberAccentWord>kept</EmberAccentWord>.</>
+						) : (
+							<>
+								What do you feel like{" "}
+								<EmberAccentWord>writing</EmberAccentWord> today?
+							</>
+						)}
+					</EmberHeadline>
+
+					<EmberBody className="mt-4">
 						{archived
-							? "Your journal is shared."
-							: "What do you feel like writing today?"}
-					</h1>
+							? "It's archived now — read it anytime from the Archive tab."
+							: "No prompt, no pressure. The page is here when you are."}
+					</EmberBody>
 				</div>
 
 				{archived ? (
-					<div className="mt-6 rounded-2xl bg-white px-5 py-5">
-						<p className="text-base text-neutral-700 leading-relaxed">
-							You shared your journal. It's archived now — view it anytime from
-							the Journal tab.
-						</p>
+					<div
+						className="mt-8 rounded-2xl px-5 py-5"
+						style={{ backgroundColor: "var(--ember-card)" }}
+					>
 						<button
 							type="button"
 							onClick={() => router.push(`/r/${token}/journal`)}
-							className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-neutral-900 underline underline-offset-2 hover:text-neutral-700 transition-colors"
+							className="font-serif italic text-base inline-flex items-center gap-1.5"
+							style={{ color: "var(--ember-terracotta)" }}
 						>
-							View your journal <span aria-hidden="true">→</span>
+							View your journal
+							<svg
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="1.75"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								className="h-4 w-4"
+								aria-hidden="true"
+							>
+								<line x1="5" y1="12" x2="19" y2="12" />
+								<polyline points="13 6 19 12 13 18" />
+							</svg>
 						</button>
 					</div>
 				) : (
 					<>
-						<div className="mt-6">
+						<div className="mt-8">
 							<EntryComposer key={composerKey} onSave={handleSave} />
-						</div>
-
-						{savedToast && (
 							<p
-								className="mt-3 text-sm"
-								style={{ color: "#B8693E" }}
+								className="mt-3 text-center font-serif italic text-sm"
+								style={{ color: "var(--ember-warm-gray)" }}
 								role="status"
 							>
-								Saved to your journal.
+								{savedToast
+									? "Saved to your journal."
+									: "your words, auto-saved as you go"}
 							</p>
-						)}
+						</div>
 
-						<p className="mt-10 text-[11px] font-medium tracking-[0.18em] uppercase text-neutral-500 mb-3">
-							Or, if you'd like a starting point
-						</p>
+						<div className="mt-10">
+							<EmberEyebrow>OR, A WAY IN</EmberEyebrow>
+						</div>
 
-						<div className="flex flex-col gap-2">
-					<StartingPointCard
-						onClick={() => router.push(`/r/${token}/prompts`)}
-						label="Pick a prompt"
-						icon={
-							<svg
-								aria-hidden="true"
-								viewBox="0 0 24 24"
-								fill="currentColor"
-								className="h-5 w-5"
-							>
-								<path d="M7 6c-2 0-3.5 1.5-3.5 3.5S5 13 7 13c.4 0 .8-.05 1.1-.15-.4 1.7-1.7 3-3.6 3.5v1.4c3.7-.5 6-3 6-6.4V9.5C10.5 7.5 9 6 7 6zm10 0c-2 0-3.5 1.5-3.5 3.5S15 13 17 13c.4 0 .8-.05 1.1-.15-.4 1.7-1.7 3-3.6 3.5v1.4c3.7-.5 6-3 6-6.4V9.5C20.5 7.5 19 6 17 6z" />
-							</svg>
-						}
-					/>
-					<StartingPointCard
-						onClick={() => router.push(`/r/${token}/ai`)}
-						label="Talk it through with Ember"
-						icon={
-							<svg
-								aria-hidden="true"
-								viewBox="0 0 24 24"
-								fill="currentColor"
-								className="h-5 w-5"
-							>
-								<path d="M12 2l1.6 5.4L19 9l-5.4 1.6L12 16l-1.6-5.4L5 9l5.4-1.6L12 2z" />
-							</svg>
-						}
-					/>
-					<StartingPointCard
-						onClick={() => router.push(`/r/${token}/voice`)}
-						label="Record your voice"
-						icon={
-							<span
-								className="block h-3 w-3 rounded-full"
-								style={{ backgroundColor: "#B8693E" }}
+						<div className="mt-4 flex flex-col gap-3">
+							<EmberNumberedCard
+								numeral="i"
+								title="A prompt from the collection"
+								subtitle="a small, careful list"
+								onClick={() => router.push(`/r/${token}/prompts`)}
 							/>
-						}
-					/>
+							<EmberNumberedCard
+								numeral="ii"
+								title="Speak with Ember"
+								subtitle="when you'd rather think out loud"
+								onClick={() => router.push(`/r/${token}/ai`)}
+							/>
+							<EmberNumberedCard
+								numeral="iii"
+								title="Record your voice"
+								subtitle="leave it as a voice note"
+								onClick={() => router.push(`/r/${token}/voice`)}
+							/>
 						</div>
 					</>
 				)}
-			</div>
+			</EmberContainer>
 
 			<BottomTabs token={token} active="today" />
-		</main>
-	)
-}
-
-function StartingPointCard({
-	icon,
-	label,
-	onClick,
-}: {
-	icon: React.ReactNode
-	label: string
-	onClick: () => void
-}) {
-	return (
-		<button
-			type="button"
-			onClick={onClick}
-			className="w-full flex items-center justify-between gap-3 rounded-2xl bg-white px-5 py-4 text-left transition-colors hover:bg-neutral-50 active:bg-neutral-100"
-		>
-			<div className="flex items-center gap-3 min-w-0">
-				<span
-					className="shrink-0 flex h-6 w-6 items-center justify-center"
-					style={{ color: "#B8693E" }}
-				>
-					{icon}
-				</span>
-				<span className="text-base text-neutral-900">{label}</span>
-			</div>
-			<span className="text-neutral-400 text-base shrink-0" aria-hidden="true">
-				›
-			</span>
-		</button>
+		</EmberPage>
 	)
 }

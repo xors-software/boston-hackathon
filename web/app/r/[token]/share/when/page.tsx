@@ -118,12 +118,12 @@ export default function ShareWhenPage() {
 	}
 
 	return (
-		<main className="min-h-dvh w-full bg-white">
+		<main className="min-h-dvh w-full bg-[color:var(--ember-card)]">
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-32 sm:px-8">
 				<button
 					type="button"
 					onClick={() => router.back()}
-					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-neutral-700 transition-colors hover:text-neutral-900"
+					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:text-[color:var(--ember-ink)]"
 				>
 					<svg
 						aria-hidden="true"
@@ -143,14 +143,14 @@ export default function ShareWhenPage() {
 				<header className="mt-6 mb-8">
 					<p
 						className="text-[11px] font-medium tracking-[0.22em] uppercase mb-3"
-						style={{ color: "#B8693E" }}
+						style={{ color: "var(--ember-terracotta)" }}
 					>
 						Sharing
 					</p>
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-neutral-900 mb-3">
+					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)] mb-3">
 						How and when to share.
 					</h1>
-					<p className="text-base text-neutral-600 leading-relaxed">
+					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						Your journal is yours. If you'd like to share it, you choose when —
 						there's no rush.
 					</p>
@@ -165,16 +165,16 @@ export default function ShareWhenPage() {
 									type="button"
 									onClick={() => select(opt.id)}
 									aria-pressed={isSelected}
-									className={`w-full text-left rounded-2xl border bg-white px-5 py-4 transition-colors ${
+									className={`w-full text-left rounded-2xl border bg-[color:var(--ember-card)] px-5 py-4 transition-colors ${
 										isSelected
 											? "border-neutral-900"
-											: "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50"
+											: "border-[color:var(--ember-divider)] hover:border-[color:var(--ember-divider)] hover:bg-[color:var(--ember-cream-light)]"
 									}`}
 								>
-									<div className="text-base font-semibold text-neutral-900 mb-1">
+									<div className="text-base font-semibold text-[color:var(--ember-ink)] mb-1">
 										{opt.title}
 									</div>
-									<div className="text-sm text-neutral-600 leading-relaxed">
+									<div className="text-sm text-[color:var(--ember-warm-gray)] leading-relaxed">
 										{opt.body}
 									</div>
 									{opt.recommended && (
@@ -190,7 +190,7 @@ export default function ShareWhenPage() {
 								{isSelected && opt.id === "date" && (
 									<div className="mt-2 px-2">
 										<label className="flex flex-col gap-2">
-											<span className="text-sm font-medium text-neutral-700">
+											<span className="text-sm font-medium text-[color:var(--ember-warm-gray)]">
 												Pick a date
 											</span>
 											<input
@@ -200,7 +200,7 @@ export default function ShareWhenPage() {
 												onChange={(e) =>
 													setDraft((d) => ({ ...d, date: e.target.value }))
 												}
-												className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-base text-neutral-900 outline-none focus:border-neutral-900 transition-colors"
+												className="w-full rounded-xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] px-4 py-3 text-base text-[color:var(--ember-ink)] outline-none focus:border-neutral-900 transition-colors"
 											/>
 										</label>
 									</div>
@@ -219,7 +219,7 @@ export default function ShareWhenPage() {
 														className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
 															active
 																? "border-neutral-900 bg-neutral-900 text-white"
-																: "border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400"
+																: "border-[color:var(--ember-divider)] bg-[color:var(--ember-card)] text-[color:var(--ember-warm-gray)] hover:border-neutral-400"
 														}`}
 													>
 														{m.label}
@@ -238,12 +238,12 @@ export default function ShareWhenPage() {
 														milestoneText: e.target.value,
 													}))
 												}
-												className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-neutral-900 transition-colors"
+												className="w-full rounded-xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] px-4 py-3 text-base text-[color:var(--ember-ink)] placeholder:text-[color:var(--ember-soft-gray)] outline-none focus:border-neutral-900 transition-colors"
 											/>
 										)}
 										{draft.milestonePreset && (
 											<label className="flex flex-col gap-2">
-												<span className="text-sm font-medium text-neutral-700">
+												<span className="text-sm font-medium text-[color:var(--ember-warm-gray)]">
 													Pick the date
 												</span>
 												<input
@@ -253,7 +253,7 @@ export default function ShareWhenPage() {
 													onChange={(e) =>
 														setDraft((d) => ({ ...d, date: e.target.value }))
 													}
-													className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-base text-neutral-900 outline-none focus:border-neutral-900 transition-colors"
+													className="w-full rounded-xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] px-4 py-3 text-base text-[color:var(--ember-ink)] outline-none focus:border-neutral-900 transition-colors"
 												/>
 											</label>
 										)}
@@ -265,13 +265,13 @@ export default function ShareWhenPage() {
 				</div>
 			</div>
 
-			<div className="fixed bottom-0 left-0 right-0 border-t border-neutral-200 bg-white">
+			<div className="fixed bottom-0 left-0 right-0 border-t border-[color:var(--ember-divider)] bg-[color:var(--ember-card)]">
 				<div className="mx-auto w-full max-w-md px-6 py-4 sm:px-8">
 					<button
 						type="button"
 						onClick={onContinue}
 						disabled={!canContinue}
-						className="w-full rounded-2xl bg-neutral-900 py-4 text-base font-medium text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
+						className="ember-cta"
 					>
 						Continue
 					</button>

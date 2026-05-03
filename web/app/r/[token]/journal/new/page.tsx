@@ -43,13 +43,13 @@ export default function NewEntryPage() {
 
 	return (
 		<main
-			className="min-h-dvh w-full bg-white"
+			className="min-h-dvh w-full bg-[color:var(--ember-card)]"
 		>
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-12 sm:px-8">
 				<button
 					type="button"
 					onClick={() => router.back()}
-					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-neutral-700 transition-colors hover:text-neutral-900"
+					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:text-[color:var(--ember-ink)]"
 				>
 					<svg
 						aria-hidden="true"
@@ -67,10 +67,10 @@ export default function NewEntryPage() {
 				</button>
 
 				<header className="mt-6 mb-6">
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-neutral-900">
+					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)]">
 						{prompt ? "Write about it." : "New entry."}
 					</h1>
-					<p className="mt-2 text-base text-neutral-500 leading-relaxed">
+					<p className="mt-2 text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						Text, voice, photo — whatever feels right.
 					</p>
 				</header>

@@ -3,7 +3,7 @@ import "./custom.css"
 import { cn } from "@/utils/cn"
 import { APP_CONFIG } from "@/config"
 import type { Metadata } from "next"
-import { GeistSans, GeistMono } from "@/fonts/fonts"
+import { GeistSans, GeistMono, FrauncesSerif } from "@/fonts/fonts"
 import { Toaster } from "@/components/toasts/Toaster"
 import { QueryProvider } from "@/providers"
 
@@ -18,7 +18,14 @@ export default function RootLayout({
 	children: React.ReactNode
 }) {
 	return (
-		<html lang="en" className={cn(GeistSans.variable, GeistMono.variable)}>
+		<html
+			lang="en"
+			className={cn(
+				GeistSans.variable,
+				GeistMono.variable,
+				FrauncesSerif.variable,
+			)}
+		>
 			<body className="font-sans antialiased bg-background text-foreground">
 				<QueryProvider>
 					{children}

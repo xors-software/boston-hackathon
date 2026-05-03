@@ -1,10 +1,10 @@
-// Storage abstraction for recipient uploads (audio + photos).
+// Storage abstraction for question + recipient uploads (audio + photos).
 //
-// The S3 wiring is a separate task that hasn't landed yet. This module
-// keeps the route code clean: it always calls `storage.put(...)` and
-// gets back a stable URL. The active backend is selected from env at
-// boot — production points at S3 (AWS SDK v3); dev/test runs against
-// the in-memory fake exposed by `createInMemoryStorage()`.
+// The route code always calls `storage.put(...)` and gets back a stable
+// URL. The active backend is selected from env at boot:
+//   memory (default) — in-process, lost on restart, fine for dev/test
+//   s3              — any S3-compatible endpoint (Railway / R2 / AWS),
+//                     via Bun's built-in S3Client (no extra deps)
 
 export interface PutInput {
 	bucket: string
@@ -67,49 +67,34 @@ export function createInMemoryStorage(
 	}
 }
 
-// S3 backend. Lazy-loaded so dev/test environments without
-// `@aws-sdk/client-s3` installed (the package isn't a hard dep — that
-// arrives with the S3 task) don't break boot. Untyped so type-check
-// passes when the SDK isn't on disk.
+// S3 backend via Bun's native S3Client. Works against any S3-compatible
+// endpoint (Railway, R2, AWS, MinIO) — no AWS SDK install required.
 async function createS3Storage(): Promise<Storage> {
-	const region = process.env.S3_REGION
-	const accessKeyId = process.env.AWS_ACCESS_KEY_ID
-	const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
-	if (!region || !accessKeyId || !secretAccessKey) {
+	const accessKeyId = process.env.S3_ACCESS_KEY_ID
+	const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY
+	const region = process.env.S3_REGION ?? "auto"
+	const endpoint = process.env.S3_ENDPOINT
+	if (!accessKeyId || !secretAccessKey) {
 		throw new Error(
-			"S3 backend requested but S3_REGION / AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY missing",
+			"S3 backend requested but S3_ACCESS_KEY_ID / S3_SECRET_ACCESS_KEY missing",
 		)
 	}
-	let mod: any
-	try {
-		mod = await import("@aws-sdk/client-s3" as any)
-	} catch {
-		throw new Error(
-			"S3 backend requested but @aws-sdk/client-s3 is not installed. Run: bun add @aws-sdk/client-s3",
-		)
-	}
-	const client = new mod.S3Client({
-		region,
-		credentials: { accessKeyId, secretAccessKey },
-	})
+	const { S3Client } = await import("bun")
 	return {
 		async put({ bucket, key, body, contentType }) {
-			await client.send(
-				new mod.PutObjectCommand({
-					Bucket: bucket,
-					Key: key,
-					Body:
-						body instanceof Uint8Array
-							? body
-							: new Uint8Array(body as ArrayBuffer),
-					ContentType: contentType,
-				}),
-			)
-			return {
-				url: `s3://${bucket}/${key}`,
+			const client = new S3Client({
+				accessKeyId,
+				secretAccessKey,
+				region,
 				bucket,
-				key,
-			}
+				...(endpoint ? { endpoint } : {}),
+			})
+			const bytes =
+				body instanceof Uint8Array
+					? body
+					: new Uint8Array(body as ArrayBuffer)
+			await client.write(key, bytes, contentType ? { type: contentType } : {})
+			return { url: `s3://${bucket}/${key}`, bucket, key }
 		},
 	}
 }

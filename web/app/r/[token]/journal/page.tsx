@@ -96,25 +96,25 @@ export default function JournalPage() {
 	if (!hydrated) return null
 
 	return (
-		<main className="min-h-dvh w-full bg-white">
+		<main className="min-h-dvh w-full bg-[color:var(--ember-card)]">
 			<div className="mx-auto w-full max-w-md pb-32">
 				<header
 					className="px-6 pt-6 pb-6 sm:px-8"
-					style={{ backgroundColor: "#F1ECE2" }}
+					style={{ backgroundColor: "var(--ember-cream)" }}
 				>
 					<div className="flex items-center justify-end mb-6">
 						<AvatarMenu initial={initial} bg="#FFFFFF" border />
 					</div>
 
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-neutral-900 mb-1">
+					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)] mb-1">
 						Your journal
 					</h1>
-					<p className="text-base text-neutral-600">
+					<p className="text-base text-[color:var(--ember-warm-gray)]">
 						A quiet place to gather things
 					</p>
 				</header>
 
-				<div className="px-6 sm:px-8 border-b border-neutral-200">
+				<div className="px-6 sm:px-8 border-b border-[color:var(--ember-divider)]">
 					<div className="flex items-center gap-6 py-3">
 						{VIEWS.map((v) => {
 							const isActive = view === v.id
@@ -125,8 +125,8 @@ export default function JournalPage() {
 									onClick={() => setView(v.id)}
 									className={`relative inline-flex items-center gap-1.5 pb-2 -mb-3 text-base transition-colors ${
 										isActive
-											? "text-neutral-900"
-											: "text-neutral-500 hover:text-neutral-700"
+											? "text-[color:var(--ember-ink)]"
+											: "text-[color:var(--ember-warm-gray)] hover:text-[color:var(--ember-warm-gray)]"
 									}`}
 								>
 									{v.icon}
@@ -134,7 +134,7 @@ export default function JournalPage() {
 									{isActive && (
 										<span
 											className="absolute left-0 right-0 -bottom-px h-[2px]"
-											style={{ backgroundColor: "#B8693E" }}
+											style={{ backgroundColor: "var(--ember-terracotta)" }}
 										/>
 									)}
 								</button>
@@ -146,11 +146,11 @@ export default function JournalPage() {
 				{archived && sharedAt && (
 					<div
 						className="mx-6 sm:mx-8 mt-4 rounded-2xl px-4 py-3 text-sm"
-						style={{ backgroundColor: "#F1ECE2", color: "#7A4A2A" }}
+						style={{ backgroundColor: "var(--ember-cream)", color: "var(--ember-ink)" }}
 					>
 						<div
 							className="text-[10px] font-medium tracking-[0.18em] uppercase mb-1"
-							style={{ color: "#B8693E" }}
+							style={{ color: "var(--ember-terracotta)" }}
 						>
 							Archived
 						</div>
@@ -197,7 +197,7 @@ function ListView({ entries }: { entries: JournalEntry[] }) {
 		<div className="flex flex-col gap-8">
 			{grouped.map((group) => (
 				<section key={group.key}>
-					<h2 className="text-[11px] font-medium tracking-[0.18em] uppercase text-neutral-500 mb-3">
+					<h2 className="text-[11px] font-medium tracking-[0.18em] uppercase text-[color:var(--ember-warm-gray)] mb-3">
 						{group.label}
 					</h2>
 					<ul className="flex flex-col">
@@ -226,25 +226,25 @@ function EntryRow({ entry, last }: { entry: JournalEntry; last: boolean }) {
 
 	return (
 		<li
-			className={`flex gap-4 py-4 ${last ? "" : "border-b border-neutral-200"}`}
+			className={`flex gap-4 py-4 ${last ? "" : "border-b border-[color:var(--ember-divider)]"}`}
 		>
 			<div className="shrink-0 w-10 text-center pt-0.5">
-				<div className="text-xl font-semibold text-neutral-900 leading-none">
+				<div className="text-xl font-semibold text-[color:var(--ember-ink)] leading-none">
 					{day}
 				</div>
-				<div className="mt-1 text-[11px] tracking-wider text-neutral-500">
+				<div className="mt-1 text-[11px] tracking-wider text-[color:var(--ember-warm-gray)]">
 					{dow}
 				</div>
 			</div>
 			<div className="flex-1 min-w-0">
-				<div className="text-base font-semibold text-neutral-900">{title}</div>
+				<div className="text-base font-semibold text-[color:var(--ember-ink)]">{title}</div>
 				{entry.promptText && (
-					<div className="mt-0.5 text-sm italic text-neutral-500">
+					<div className="mt-0.5 text-sm italic text-[color:var(--ember-warm-gray)]">
 						"{entry.promptText}"
 					</div>
 				)}
 				{preview && (
-					<p className="mt-1 text-sm text-neutral-600 leading-relaxed">
+					<p className="mt-1 text-sm text-[color:var(--ember-warm-gray)] leading-relaxed">
 						{preview}
 					</p>
 				)}
@@ -316,22 +316,22 @@ function CalendarView({ entries }: { entries: JournalEntry[] }) {
 					type="button"
 					onClick={() => shift(-1)}
 					aria-label="Previous month"
-					className="p-1 text-neutral-500 hover:text-neutral-900 transition-colors"
+					className="p-1 text-[color:var(--ember-warm-gray)] hover:text-[color:var(--ember-ink)] transition-colors"
 				>
 					‹
 				</button>
-				<div className="text-sm font-medium text-neutral-900">{monthLabel}</div>
+				<div className="text-sm font-medium text-[color:var(--ember-ink)]">{monthLabel}</div>
 				<button
 					type="button"
 					onClick={() => shift(1)}
 					aria-label="Next month"
-					className="p-1 text-neutral-500 hover:text-neutral-900 transition-colors"
+					className="p-1 text-[color:var(--ember-warm-gray)] hover:text-[color:var(--ember-ink)] transition-colors"
 				>
 					›
 				</button>
 			</div>
 
-			<div className="grid grid-cols-7 gap-1 mb-2 text-center text-[10px] tracking-wider text-neutral-400">
+			<div className="grid grid-cols-7 gap-1 mb-2 text-center text-[10px] tracking-wider text-[color:var(--ember-soft-gray)]">
 				{["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
 					<div key={i}>{d}</div>
 				))}
@@ -355,17 +355,17 @@ function CalendarView({ entries }: { entries: JournalEntry[] }) {
 								selected
 									? "bg-neutral-900 text-white"
 									: today_
-										? "border-2 border-neutral-900 text-neutral-900"
+										? "border-2 border-neutral-900 text-[color:var(--ember-ink)]"
 										: has
-											? "bg-neutral-100 text-neutral-900 hover:bg-neutral-200"
-											: "text-neutral-500 hover:bg-neutral-50"
+											? "bg-neutral-100 text-[color:var(--ember-ink)] hover:bg-neutral-200"
+											: "text-[color:var(--ember-warm-gray)] hover:bg-[color:var(--ember-cream-light)]"
 							}`}
 						>
 							<span className="leading-none">{d}</span>
 							{has && (
 								<span
-									className={`mt-0.5 block h-1 w-1 rounded-full ${selected ? "bg-white" : ""}`}
-									style={selected ? undefined : { backgroundColor: "#B8693E" }}
+									className={`mt-0.5 block h-1 w-1 rounded-full ${selected ? "bg-[color:var(--ember-card)]" : ""}`}
+									style={selected ? undefined : { backgroundColor: "var(--ember-terracotta)" }}
 								/>
 							)}
 						</button>
@@ -376,7 +376,7 @@ function CalendarView({ entries }: { entries: JournalEntry[] }) {
 			<div className="mt-6">
 				{selectedDay ? (
 					<>
-						<h3 className="text-[11px] font-medium tracking-[0.18em] uppercase text-neutral-500 mb-3">
+						<h3 className="text-[11px] font-medium tracking-[0.18em] uppercase text-[color:var(--ember-warm-gray)] mb-3">
 							{selectedDateLabel}
 						</h3>
 						{selectedEntries.length > 0 ? (
@@ -390,13 +390,13 @@ function CalendarView({ entries }: { entries: JournalEntry[] }) {
 								))}
 							</ul>
 						) : (
-							<p className="text-sm text-neutral-500 py-2">
+							<p className="text-sm text-[color:var(--ember-warm-gray)] py-2">
 								Nothing on this day.
 							</p>
 						)}
 					</>
 				) : (
-					<p className="text-center text-sm text-neutral-500 py-2">
+					<p className="text-center text-sm text-[color:var(--ember-warm-gray)] py-2">
 						Tap a day to see what you wrote.
 					</p>
 				)}
@@ -409,7 +409,7 @@ function MediaView({ entries }: { entries: JournalEntry[] }) {
 	const media = entries.filter((e) => e.photoDataUrl || e.audioDataUrl)
 	if (media.length === 0) {
 		return (
-			<p className="text-center text-sm text-neutral-500 py-12">
+			<p className="text-center text-sm text-[color:var(--ember-warm-gray)] py-12">
 				Photos and voice notes show up here.
 			</p>
 		)
@@ -419,7 +419,7 @@ function MediaView({ entries }: { entries: JournalEntry[] }) {
 			{media.map((e) => (
 				<div
 					key={e.id}
-					className="aspect-square rounded-2xl overflow-hidden bg-neutral-100 border border-neutral-200"
+					className="aspect-square rounded-2xl overflow-hidden bg-neutral-100 border border-[color:var(--ember-divider)]"
 				>
 					{e.photoDataUrl ? (
 						<img
@@ -428,7 +428,7 @@ function MediaView({ entries }: { entries: JournalEntry[] }) {
 							className="block w-full h-full object-cover"
 						/>
 					) : (
-						<div className="w-full h-full flex flex-col items-center justify-center text-neutral-500">
+						<div className="w-full h-full flex flex-col items-center justify-center text-[color:var(--ember-warm-gray)]">
 							<svg
 								viewBox="0 0 24 24"
 								fill="none"
@@ -454,13 +454,13 @@ function MediaView({ entries }: { entries: JournalEntry[] }) {
 
 function EmptyState() {
 	return (
-		<div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 px-6 py-10 text-center">
-			<p className="text-base font-medium text-neutral-900 mb-1">
+		<div className="rounded-2xl border border-dashed border-[color:var(--ember-divider)] bg-[color:var(--ember-cream-light)] px-6 py-10 text-center">
+			<p className="text-base font-medium text-[color:var(--ember-ink)] mb-1">
 				Nothing here yet.
 			</p>
-			<p className="text-sm text-neutral-500 leading-relaxed">
+			<p className="text-sm text-[color:var(--ember-warm-gray)] leading-relaxed">
 				Start writing on Today, or tap{" "}
-				<span className="font-medium text-neutral-700">+ New entry</span>.
+				<span className="font-medium text-[color:var(--ember-warm-gray)]">+ New entry</span>.
 			</p>
 		</div>
 	)
