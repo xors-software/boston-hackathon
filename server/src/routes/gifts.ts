@@ -662,12 +662,20 @@ async function deliverInvitation(
 	);
 	const link = `${baseUrl}/r/${result.recipient.accessToken}`;
 	try {
-		await sendInvitation({
+		const outcome = await sendInvitation({
 			recipientEmail: result.recipient.email,
 			recipientName: result.recipient.name,
 			giverName: giverDisplayName(user),
 			link,
 		});
+		if (!outcome.sent && outcome.reason === "no-api-key") {
+			// Dev/CI default — gift is created, link is in the response,
+			// no email goes out. Log at info level so it doesn't pollute
+			// error monitoring.
+			console.log(
+				`[email] no EMAIL_PROVIDER_API_KEY set; skipping invitation for gift=${result.gift.id} recipient=${result.recipient.email}`,
+			);
+		}
 	} catch (err) {
 		console.error(
 			`[email] invitation failed for gift=${result.gift.id} recipient=${result.recipient.email}:`,

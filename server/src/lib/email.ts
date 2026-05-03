@@ -76,13 +76,21 @@ export function buildSubject(giverName: string): string {
 	return `${giverName} sent you an Ember gift`;
 }
 
-export async function sendInvitation(input: SendInvitationInput): Promise<void> {
+export type InvitationOutcome =
+	| { sent: true }
+	| { sent: false; reason: "no-api-key" };
+
+// Sends the invitation through Resend. If `EMAIL_PROVIDER_API_KEY` is
+// unset (the dev/CI default), returns `{sent:false, reason:"no-api-key"}`
+// instead of throwing — the gift is still created, the recipient still
+// has a token, the giver can resend once the key is configured. Real
+// upstream failures (Resend non-2xx) still throw so the route handler
+// can log them with full context.
+export async function sendInvitation(
+	input: SendInvitationInput,
+): Promise<InvitationOutcome> {
 	const apiKey = process.env.EMAIL_PROVIDER_API_KEY;
-	if (!apiKey) {
-		throw new Error(
-			"EMAIL_PROVIDER_API_KEY is not set — invitation email cannot be sent.",
-		);
-	}
+	if (!apiKey) return { sent: false, reason: "no-api-key" };
 	const from = process.env.EMAIL_FROM ?? DEFAULT_FROM;
 
 	const res = await fetch(RESEND_ENDPOINT, {
@@ -104,6 +112,7 @@ export async function sendInvitation(input: SendInvitationInput): Promise<void> 
 		const body = await res.text().catch(() => "");
 		throw new Error(`Resend ${res.status}: ${body || res.statusText}`);
 	}
+	return { sent: true };
 }
 
 function escapeText(s: string): string {
