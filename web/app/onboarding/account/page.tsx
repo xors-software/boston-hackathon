@@ -1,7 +1,7 @@
 "use client"
 
-import { useRouter, useSearchParams } from "next/navigation"
-import { type FormEvent, useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { type FormEvent, use, useEffect, useState } from "react"
 import { useLogin } from "@/hooks/useLogin"
 import { useUser } from "@/hooks/useUser"
 import { ApiError } from "@/lib/api"
@@ -11,16 +11,18 @@ import { useEnsureGift } from "../_lib/sync"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-export default function AccountPage() {
+type SearchParams = Promise<{ signed_in?: string; error?: string }>
+
+export default function AccountPage({ searchParams }: { searchParams: SearchParams }) {
 	const router = useRouter()
-	const search = useSearchParams()
+	const search = use(searchParams)
 	const { state, update, hydrated } = useOnboardingState()
 	const { data: user, isLoading } = useUser()
 	const login = useLogin()
 	useEnsureGift(hydrated ? state : null)
 
-	const justSignedIn = search.get("signed_in") === "google"
-	const oauthError = search.get("error")
+	const justSignedIn = search.signed_in === "google"
+	const oauthError = search.error
 
 	const [email, setEmail] = useState("")
 	const [password, setPassword] = useState("")
