@@ -32,6 +32,7 @@ export const stepEnum = pgEnum("onboarding_step", [
 	"world",
 	"questions",
 	"delivery",
+	"letter",
 	"send",
 	"complete",
 ]);
