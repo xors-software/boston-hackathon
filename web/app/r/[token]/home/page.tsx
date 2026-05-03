@@ -9,7 +9,7 @@ import {
 	EmberContainer,
 	EmberEyebrow,
 	EmberHeadline,
-	EmberNumberedCard,
+	EmberListCard,
 	EmberPage,
 } from "@/components/ember/EmberChrome"
 import { AvatarMenu } from "../_components/AvatarMenu"
@@ -140,20 +140,17 @@ export default function ParentHomePage() {
 						</div>
 
 						<div className="mt-4 flex flex-col gap-3">
-							<EmberNumberedCard
-								numeral="i"
+							<EmberListCard
 								title="A prompt from the collection"
 								subtitle="a small, careful list"
 								onClick={() => router.push(`/r/${token}/prompts`)}
 							/>
-							<EmberNumberedCard
-								numeral="ii"
+							<EmberListCard
 								title="Speak with Ember"
 								subtitle="when you'd rather think out loud"
 								onClick={() => router.push(`/r/${token}/ai`)}
 							/>
-							<EmberNumberedCard
-								numeral="iii"
+							<EmberListCard
 								title="Record your voice"
 								subtitle="leave it as a voice note"
 								onClick={() => router.push(`/r/${token}/voice`)}

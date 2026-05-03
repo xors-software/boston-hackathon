@@ -193,7 +193,7 @@ export default function AiAboutPage() {
 	}
 
 	return (
-		<main className="min-h-dvh bg-[color:var(--ember-card)] flex flex-col">
+		<main className="min-h-dvh bg-[color:var(--ember-cream)] flex flex-col">
 			<div className="mx-auto w-full max-w-md flex-1 flex flex-col px-6 pt-6 pb-6 sm:px-8">
 				<button
 					type="button"
@@ -216,8 +216,8 @@ export default function AiAboutPage() {
 				</button>
 
 				<header className="mt-4 mb-5">
-					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)]">
-						Let's talk about {labels.subject}.
+					<h1 className="mb-3 font-serif text-[40px] sm:text-[44px] tracking-tight leading-[1.05] text-[color:var(--ember-ink)]">
+						Let's <span className="italic" style={{ color: "var(--ember-terracotta)" }}>talk</span> about {labels.subject}.
 					</h1>
 					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						I'll ask a few questions. What you tell me here personalizes{" "}

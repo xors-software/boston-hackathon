@@ -67,8 +67,29 @@ export default function NewEntryPage() {
 				</button>
 
 				<header className="mt-6 mb-6">
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)]">
-						{prompt ? "Write about it." : "New entry."}
+					<h1 className="font-serif text-[40px] sm:text-[44px] tracking-tight leading-[1.05] text-[color:var(--ember-ink)]">
+						{prompt ? (
+							<>
+								<span
+									className="italic"
+									style={{ color: "var(--ember-terracotta)" }}
+								>
+									Write
+								</span>{" "}
+								about it.
+							</>
+						) : (
+							<>
+								New{" "}
+								<span
+									className="italic"
+									style={{ color: "var(--ember-terracotta)" }}
+								>
+									entry
+								</span>
+								.
+							</>
+						)}
 					</h1>
 					<p className="mt-2 text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						Text, voice, photo — whatever feels right.

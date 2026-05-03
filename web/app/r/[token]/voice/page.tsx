@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
+import { EmberTextArea } from "@/components/ember/EmberTextArea"
 import { type JournalEntry, newEntryId } from "../_lib/entries"
 import { isArchived } from "../_lib/sharing"
 import { useParentState } from "../_lib/state"
@@ -176,8 +177,30 @@ export default function VoicePage() {
 					>
 						Voice note
 					</p>
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)] mb-2">
-						{showReview ? "Sound right?" : "Press record. Take your time."}
+					<h1 className="font-serif text-[40px] sm:text-[44px] tracking-tight leading-[1.05] text-[color:var(--ember-ink)] mb-2">
+						{showReview ? (
+							<>
+								Sound{" "}
+								<span
+									className="italic"
+									style={{ color: "var(--ember-terracotta)" }}
+								>
+									right
+								</span>
+								?
+							</>
+						) : (
+							<>
+								Press{" "}
+								<span
+									className="italic"
+									style={{ color: "var(--ember-terracotta)" }}
+								>
+									record
+								</span>
+								. Take your time.
+							</>
+						)}
 					</h1>
 					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						{showReview
@@ -267,11 +290,13 @@ export default function VoicePage() {
 							</button>
 						</div>
 
-						<textarea
+						<EmberTextArea
 							value={transcript}
-							onChange={(e) => setTranscript(e.target.value)}
+							onChange={setTranscript}
+							placeholder="Edit your transcript"
 							rows={10}
-							className="w-full flex-1 resize-none rounded-2xl bg-[color:var(--ember-input)] border border-[color:var(--ember-divider)] px-4 py-4 text-base text-[color:var(--ember-ink)] outline-none focus:border-neutral-900 transition-colors"
+							max={4000}
+							withMic={false}
 						/>
 
 						<button

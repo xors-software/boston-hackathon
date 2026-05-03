@@ -1,7 +1,8 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
+import { EmberTextArea } from "@/components/ember/EmberTextArea"
 import { useOnboardingState } from "../_lib/state"
 
 const MAX_CHARS = 500
@@ -11,90 +12,12 @@ export default function RecipientPage() {
 	const { state, update, hydrated } = useOnboardingState()
 
 	const [about, setAbout] = useState("")
-	const [recording, setRecording] = useState(false)
-	const [transcribing, setTranscribing] = useState(false)
-	const [recError, setRecError] = useState<string | null>(null)
-	const recorderRef = useRef<MediaRecorder | null>(null)
-	const chunksRef = useRef<Blob[]>([])
 
 	useEffect(() => {
 		if (!hydrated) return
 		const saved = state.data.about
 		if (typeof saved === "string") setAbout(saved)
 	}, [hydrated, state.data.about])
-
-	const startRecording = async () => {
-		setRecError(null)
-		if (typeof MediaRecorder === "undefined") {
-			setRecError("Voice input isn't supported on this browser.")
-			return
-		}
-		try {
-			const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-			const mr = new MediaRecorder(stream)
-			chunksRef.current = []
-			mr.ondataavailable = (e) => {
-				if (e.data && e.data.size > 0) chunksRef.current.push(e.data)
-			}
-			mr.onstop = async () => {
-				for (const t of stream.getTracks()) t.stop()
-				const blob = new Blob(chunksRef.current, {
-					type: mr.mimeType || "audio/webm",
-				})
-				chunksRef.current = []
-				if (blob.size === 0) return
-				await transcribe(blob)
-			}
-			mr.start()
-			recorderRef.current = mr
-			setRecording(true)
-		} catch (err) {
-			console.error(err)
-			setRecError("Couldn't access the microphone.")
-		}
-	}
-
-	const stopRecording = () => {
-		const mr = recorderRef.current
-		if (!mr) return
-		if (mr.state !== "inactive") mr.stop()
-		setRecording(false)
-	}
-
-	const transcribe = async (blob: Blob) => {
-		setTranscribing(true)
-		try {
-			const ext = (blob.type.split("/")[1] || "webm").split(";")[0]
-			const fd = new FormData()
-			fd.append("audio", blob, `audio.${ext}`)
-
-			const res = await fetch(`/api/transcribe`, {
-				method: "POST",
-				body: fd,
-			})
-			const data = (await res.json()) as { text?: string; error?: string }
-			if (!res.ok) {
-				setRecError(data.error || "Transcription failed.")
-				return
-			}
-			const text = (data.text || "").trim()
-			if (!text) return
-			setAbout((prev) => {
-				const sep = prev && !prev.endsWith(" ") ? " " : ""
-				return (prev + sep + text).slice(0, MAX_CHARS)
-			})
-		} catch (err) {
-			console.error(err)
-			setRecError("Couldn't reach the transcription service.")
-		} finally {
-			setTranscribing(false)
-		}
-	}
-
-	const toggleRecord = () => {
-		if (transcribing) return
-		recording ? stopRecording() : startRecording()
-	}
 
 	const goNext = () => {
 		update({ step: "why", data: { about } })
@@ -112,99 +35,73 @@ export default function RecipientPage() {
 	}
 
 	return (
-		<main className="min-h-dvh bg-[color:var(--ember-card)]">
+		<main className="min-h-dvh bg-[color:var(--ember-cream)]">
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-12 sm:px-8">
 				<div className="flex items-center justify-between">
 					<button
 						type="button"
 						onClick={() => router.back()}
-						className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:text-[color:var(--ember-ink)]"
+						className="-ml-1 inline-flex items-center gap-1.5 py-2 text-base transition-opacity hover:opacity-80"
+						style={{ color: "var(--ember-warm-gray)" }}
 					>
 						<svg
 							aria-hidden="true"
 							viewBox="0 0 24 24"
 							fill="none"
 							stroke="currentColor"
-							strokeWidth="2"
+							strokeWidth="1.75"
 							strokeLinecap="round"
 							strokeLinejoin="round"
 							className="h-4 w-4"
 						>
 							<polyline points="15 6 9 12 15 18" />
 						</svg>
-						Back
+						<span className="font-serif italic">Back</span>
 					</button>
 					<button
 						type="button"
 						onClick={goSkip}
-						className="py-2 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:text-[color:var(--ember-warm-gray)]"
+						className="py-2 text-base font-serif italic transition-opacity hover:opacity-80"
+						style={{ color: "var(--ember-warm-gray)" }}
 					>
 						Skip
 					</button>
 				</div>
 
 				<header className="mt-6 mb-8">
-					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)]">
-						Tell us a little about them.
+					<h1
+						className="mb-3 font-serif text-[40px] sm:text-[44px] tracking-tight leading-[1.05]"
+						style={{ color: "var(--ember-ink)" }}
+					>
+						Tell us a little about{" "}
+						<span
+							className="italic"
+							style={{ color: "var(--ember-terracotta)" }}
+						>
+							them
+						</span>
+						.
 					</h1>
-					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
+					<p
+						className="text-base leading-relaxed"
+						style={{ color: "var(--ember-warm-gray)" }}
+					>
 						A phrase they say. A way they laugh. Something only you'd know.
 					</p>
 				</header>
 
-				<div className="relative rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] focus-within:border-neutral-900 transition-colors">
-					<textarea
-						value={about}
-						onChange={(e) => setAbout(e.target.value.slice(0, MAX_CHARS))}
-						placeholder={transcribing ? "Transcribing…" : "Start typing..."}
-						rows={6}
-						disabled={transcribing}
-						className="block w-full resize-none rounded-2xl bg-transparent px-4 pt-4 pb-12 text-base text-[color:var(--ember-ink)] placeholder:text-[color:var(--ember-soft-gray)] outline-none disabled:opacity-60"
-					/>
-					<div className="pointer-events-none absolute left-4 bottom-3 text-sm text-[color:var(--ember-soft-gray)]">
-						{about.length} / {MAX_CHARS}
-					</div>
-					<button
-						type="button"
-						onClick={toggleRecord}
-						disabled={transcribing}
-						aria-label={recording ? "Stop recording" : "Record voice note"}
-						className={`absolute right-3 bottom-3 flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${
-							recording
-								? "border-red-500 bg-red-500"
-								: "border-[color:var(--ember-divider)] bg-[color:var(--ember-card)] hover:bg-neutral-100"
-						} disabled:opacity-50 disabled:cursor-not-allowed`}
-					>
-						{transcribing ? (
-							<svg
-								className="h-4 w-4 animate-spin text-[color:var(--ember-warm-gray)]"
-								viewBox="0 0 24 24"
-								fill="none"
-							>
-								<circle
-									cx="12"
-									cy="12"
-									r="9"
-									stroke="currentColor"
-									strokeWidth="2"
-									opacity="0.25"
-								/>
-								<path
-									d="M21 12a9 9 0 0 0-9-9"
-									stroke="currentColor"
-									strokeWidth="2"
-									strokeLinecap="round"
-								/>
-							</svg>
-						) : (
-							<span
-								className={`block h-3 w-3 rounded-full ${recording ? "bg-[color:var(--ember-card)] animate-pulse" : "bg-neutral-700"}`}
-							/>
-						)}
-					</button>
-				</div>
+				<EmberTextArea
+					value={about}
+					onChange={setAbout}
+					placeholder="Start typing"
+					max={MAX_CHARS}
+					rows={6}
+				/>
 
-				<p className="mt-4 flex items-start gap-1.5 text-sm text-[color:var(--ember-warm-gray)]">
+				<p
+					className="mt-4 flex items-start gap-1.5 text-sm font-serif italic"
+					style={{ color: "var(--ember-warm-gray)" }}
+				>
 					<svg
 						aria-hidden="true"
 						viewBox="0 0 24 24"
@@ -220,33 +117,31 @@ export default function RecipientPage() {
 					<span>This personalizes their questions. Never shared with them.</span>
 				</p>
 
-				{recError && (
-					<p className="mt-3 text-sm text-red-500">{recError}</p>
-				)}
-
 				<div className="mt-6 flex flex-col gap-3">
-					<button
-						type="button"
-						onClick={goNext}
-						className="ember-cta"
-					>
+					<button type="button" onClick={goNext} className="ember-cta">
 						Continue
 					</button>
 
 					<button
 						type="button"
 						onClick={goAiHelp}
-						className="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-card)] py-4 text-base font-medium text-[color:var(--ember-ink)] transition-colors hover:bg-[color:var(--ember-cream-light)] active:bg-neutral-100"
+						className="w-full inline-flex items-center justify-center gap-2 rounded-full py-3.5 text-base font-serif italic transition-opacity hover:opacity-80"
+						style={{
+							backgroundColor: "transparent",
+							color: "var(--ember-ink)",
+							border: "1px solid var(--ember-divider)",
+						}}
 					>
 						<svg
 							aria-hidden="true"
 							viewBox="0 0 24 24"
 							fill="currentColor"
 							className="h-4 w-4"
+							style={{ color: "var(--ember-terracotta)" }}
 						>
 							<path d="M12 2l1.6 5.4L19 9l-5.4 1.6L12 16l-1.6-5.4L5 9l5.4-1.6L12 2z" />
 						</svg>
-						Let's talk with AI to help me
+						Let's talk with Ember to help me
 					</button>
 				</div>
 
@@ -254,7 +149,8 @@ export default function RecipientPage() {
 					<button
 						type="button"
 						onClick={goSkip}
-						className="text-sm text-[color:var(--ember-warm-gray)] underline underline-offset-2 transition-colors hover:text-[color:var(--ember-warm-gray)]"
+						className="text-sm font-serif italic underline underline-offset-2 transition-opacity hover:opacity-80"
+						style={{ color: "var(--ember-warm-gray)" }}
 					>
 						Skip for now
 					</button>

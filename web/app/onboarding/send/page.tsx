@@ -136,7 +136,7 @@ export default function SendPage() {
 	}
 
 	return (
-		<main className="min-h-dvh bg-[color:var(--ember-card)]">
+		<main className="min-h-dvh bg-[color:var(--ember-cream)]">
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-12 sm:px-8">
 				<button
 					type="button"
@@ -159,8 +159,8 @@ export default function SendPage() {
 				</button>
 
 				<header className="mt-6 mb-6">
-					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)]">
-						Ready to send.
+					<h1 className="mb-3 font-serif text-[40px] sm:text-[44px] tracking-tight leading-[1.05] text-[color:var(--ember-ink)]">
+						Ready to <span className="italic" style={{ color: "var(--ember-terracotta)" }}>send</span>.
 					</h1>
 					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						Here's what arrives in their inbox.

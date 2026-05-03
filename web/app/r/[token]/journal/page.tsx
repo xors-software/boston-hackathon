@@ -106,8 +106,8 @@ export default function JournalPage() {
 						<AvatarMenu initial={initial} bg="#FFFFFF" border />
 					</div>
 
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)] mb-1">
-						Your journal
+					<h1 className="font-serif text-[40px] sm:text-[44px] tracking-tight leading-[1.05] text-[color:var(--ember-ink)] mb-1">
+						Your <span className="italic" style={{ color: "var(--ember-terracotta)" }}>journal</span>
 					</h1>
 					<p className="text-base text-[color:var(--ember-warm-gray)]">
 						A quiet place to gather things

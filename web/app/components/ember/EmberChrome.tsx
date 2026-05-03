@@ -236,7 +236,8 @@ export function EmberAppHeader({
 	)
 }
 
-// Romain-numeral list card (i. / ii. / iii.) with arrow chevron
+// Romain-numeral variant — kept for the few places that still want a numeral
+// (e.g. /onboarding/start "Three things to know"). Most pages should use EmberListCard.
 export function EmberNumberedCard({
 	numeral,
 	title,
@@ -255,8 +256,7 @@ export function EmberNumberedCard({
 			type="button"
 			onClick={onClick}
 			disabled={disabled}
-			className="w-full text-left rounded-2xl px-6 py-5 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-			style={{ backgroundColor: "var(--ember-card)" }}
+			className="ember-list-card"
 		>
 			<div className="flex items-center gap-5">
 				<span
@@ -281,26 +281,77 @@ export function EmberNumberedCard({
 						</div>
 					)}
 				</div>
-				<span
-					aria-hidden="true"
-					className="shrink-0"
-					style={{ color: "var(--ember-warm-gray)" }}
-				>
-					<svg
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="1.25"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						className="h-5 w-5"
-					>
-						<line x1="5" y1="12" x2="19" y2="12" />
-						<polyline points="13 6 19 12 13 18" />
-					</svg>
-				</span>
+				<EmberListArrow />
 			</div>
 		</button>
+	)
+}
+
+// The canonical "image 2" list card — white, serif title, italic subtitle, arrow.
+// Use this everywhere a list of things is shown to navigate / pick from.
+export function EmberListCard({
+	title,
+	subtitle,
+	onClick,
+	disabled,
+	right,
+}: {
+	title: ReactNode
+	subtitle?: ReactNode
+	onClick?: () => void
+	disabled?: boolean
+	right?: ReactNode
+}) {
+	return (
+		<button
+			type="button"
+			onClick={onClick}
+			disabled={disabled}
+			className="ember-list-card"
+		>
+			<div className="flex items-center gap-4">
+				<div className="flex-1 min-w-0">
+					<div
+						className="font-serif text-[19px] leading-snug"
+						style={{ color: "var(--ember-ink)" }}
+					>
+						{title}
+					</div>
+					{subtitle && (
+						<div
+							className="mt-1 text-base font-serif italic"
+							style={{ color: "var(--ember-warm-gray)" }}
+						>
+							{subtitle}
+						</div>
+					)}
+				</div>
+				{right ?? <EmberListArrow />}
+			</div>
+		</button>
+	)
+}
+
+function EmberListArrow() {
+	return (
+		<span
+			aria-hidden="true"
+			className="shrink-0"
+			style={{ color: "var(--ember-warm-gray)" }}
+		>
+			<svg
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth="1.25"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				className="h-5 w-5"
+			>
+				<line x1="5" y1="12" x2="19" y2="12" />
+				<polyline points="13 6 19 12 13 18" />
+			</svg>
+		</span>
 	)
 }
 

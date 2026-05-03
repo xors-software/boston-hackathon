@@ -34,7 +34,7 @@ export default function SentPage() {
 	}
 
 	return (
-		<main className="min-h-dvh bg-[color:var(--ember-card)] flex flex-col">
+		<main className="min-h-dvh bg-[color:var(--ember-cream)] flex flex-col">
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-12 sm:px-8 flex-1 flex flex-col">
 				<button
 					type="button"
@@ -57,8 +57,8 @@ export default function SentPage() {
 				</button>
 
 				<div className="flex-1 flex flex-col items-center justify-center text-center px-2">
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)] mb-4">
-						It's on its way.
+					<h1 className="font-serif text-[40px] sm:text-[44px] tracking-tight leading-[1.05] text-[color:var(--ember-ink)] mb-4">
+						It's on its <span className="italic" style={{ color: "var(--ember-terracotta)" }}>way</span>.
 					</h1>
 					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed mb-10">
 						You'll hear back when {subject} opens it.

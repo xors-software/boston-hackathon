@@ -34,7 +34,9 @@
 	--ember-cream: #efe7d6;
 	--ember-cream-light: #fdfdfd;
 	--ember-input: #fdfdfd;
-	--ember-card: #fbf6e9;
+	/* Card uses a tiny warm tint over near-white so it sits gently above */
+	/* the cream page bg without competing with input white. */
+	--ember-card: #f8f1e0;
 	--ember-ink: #1a1410;
 	--ember-warm-gray: #7a6f60;
 	--ember-soft-gray: #b5ab9a;
@@ -186,6 +188,36 @@
 	.ember-cta-with-arrow {
 		justify-content: space-between;
 		padding-right: 16px;
+	}
+
+	/* ─── Ember list card ────────────────────────────────────────── */
+	/* The canonical "image 2" list-row card — white, serif title, soft */
+	/* drop shadow, rounded. Used for prompts, starting points, etc.    */
+	.ember-list-card {
+		display: block;
+		width: 100%;
+		text-align: left;
+		background: var(--ember-card);
+		border-radius: 20px;
+		padding: 22px 24px;
+		transition:
+			transform 0.15s ease,
+			box-shadow 0.15s ease,
+			background-color 0.15s ease;
+		box-shadow:
+			0 1px 0 rgba(255, 255, 255, 0.6) inset,
+			0 8px 22px -16px rgba(20, 12, 4, 0.18);
+		cursor: pointer;
+	}
+	.ember-list-card:hover:not(:disabled) {
+		transform: translateY(-1px);
+		box-shadow:
+			0 1px 0 rgba(255, 255, 255, 0.6) inset,
+			0 14px 28px -16px rgba(20, 12, 4, 0.22);
+	}
+	.ember-list-card:disabled {
+		opacity: 0.55;
+		cursor: not-allowed;
 	}
 	.ember-cta-arrow {
 		display: inline-flex;

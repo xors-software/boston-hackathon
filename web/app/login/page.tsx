@@ -52,7 +52,7 @@ function LoginPageInner() {
 		<main className="min-h-dvh flex items-center justify-center bg-background px-6 py-12">
 			<div className="w-full max-w-sm space-y-6">
 				<header className="text-center space-y-1">
-					<h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
+					<h1 className="text-2xl font-semibold tracking-tight"><span className="italic" style={{ color: "var(--ember-terracotta)" }}>Sign</span> in</h1>
 					<p className="text-sm text-muted-foreground">
 						Use your XORS account to continue.
 					</p>

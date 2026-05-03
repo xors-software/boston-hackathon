@@ -1,6 +1,7 @@
 "use client"
 
 import { type ChangeEvent, type FormEvent, useRef, useState } from "react"
+import { EmberTextArea } from "@/components/ember/EmberTextArea"
 import type { JournalEntrySource } from "../_lib/entries"
 
 const TEXT_MAX = 4000
@@ -35,14 +36,7 @@ export function EntryComposer({
 	const [text, setText] = useState(initialText)
 	const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null)
 	const [photoError, setPhotoError] = useState<string | null>(null)
-
-	const [recording, setRecording] = useState(false)
-	const [transcribing, setTranscribing] = useState(false)
-	const [recError, setRecError] = useState<string | null>(null)
-
 	const fileInputRef = useRef<HTMLInputElement>(null)
-	const recorderRef = useRef<MediaRecorder | null>(null)
-	const chunksRef = useRef<Blob[]>([])
 
 	const canSave = text.trim().length > 0 || Boolean(photoDataUrl)
 
@@ -64,7 +58,6 @@ export function EntryComposer({
 		})
 	}
 
-	// ─── photo ───
 	const handlePhoto = (e: ChangeEvent<HTMLInputElement>) => {
 		setPhotoError(null)
 		const file = e.target.files?.[0]
@@ -85,74 +78,6 @@ export function EntryComposer({
 		reader.readAsDataURL(file)
 	}
 
-	// ─── voice ───
-	const startRecording = async () => {
-		setRecError(null)
-		if (typeof MediaRecorder === "undefined") {
-			setRecError("Voice input isn't supported on this browser.")
-			return
-		}
-		try {
-			const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-			const mr = new MediaRecorder(stream)
-			chunksRef.current = []
-			mr.ondataavailable = (e) => {
-				if (e.data.size > 0) chunksRef.current.push(e.data)
-			}
-			mr.onstop = async () => {
-				for (const t of stream.getTracks()) t.stop()
-				const blob = new Blob(chunksRef.current, {
-					type: mr.mimeType || "audio/webm",
-				})
-				chunksRef.current = []
-				if (blob.size === 0) return
-				await transcribe(blob)
-			}
-			mr.start()
-			recorderRef.current = mr
-			setRecording(true)
-		} catch {
-			setRecError("Couldn't access the microphone.")
-		}
-	}
-
-	const stopRecording = () => {
-		const mr = recorderRef.current
-		if (!mr) return
-		if (mr.state !== "inactive") mr.stop()
-		setRecording(false)
-	}
-
-	const transcribe = async (blob: Blob) => {
-		setTranscribing(true)
-		try {
-			const ext = (blob.type.split("/")[1] || "webm").split(";")[0]
-			const fd = new FormData()
-			fd.append("audio", blob, `audio.${ext}`)
-			const res = await fetch(`/api/transcribe`, { method: "POST", body: fd })
-			const data = (await res.json()) as { text?: string; error?: string }
-			if (!res.ok) {
-				setRecError(data.error || "Transcription failed.")
-				return
-			}
-			const out = (data.text || "").trim()
-			if (!out) return
-			setText((prev) => {
-				const sep = prev && !prev.endsWith(" ") ? " " : ""
-				return (prev + sep + out).slice(0, TEXT_MAX)
-			})
-		} catch {
-			setRecError("Couldn't reach the transcription service.")
-		} finally {
-			setTranscribing(false)
-		}
-	}
-
-	const toggleRecord = () => {
-		if (transcribing) return
-		recording ? stopRecording() : startRecording()
-	}
-
 	return (
 		<form onSubmit={submit} className="flex flex-col gap-4">
 			{promptText && (
@@ -164,55 +89,14 @@ export function EntryComposer({
 				</p>
 			)}
 
-			<div
-				className="relative rounded-2xl"
-				style={{ backgroundColor: "var(--ember-input)" }}
-			>
-				<textarea
-					value={text}
-					onChange={(e) => setText(e.target.value.slice(0, TEXT_MAX))}
-					placeholder={transcribing ? "Transcribing…" : "Start writing"}
-					rows={6}
-					disabled={transcribing}
-					className="w-full resize-none rounded-2xl bg-transparent px-5 pt-5 pb-14 text-lg font-serif italic placeholder:italic outline-none disabled:opacity-60"
-					style={{ color: "var(--ember-ink)" }}
-				/>
-				<div
-					className="pointer-events-none absolute left-5 bottom-4 text-base font-serif"
-					style={{ color: "var(--ember-soft-gray)" }}
-				>
-					{text.length} / {TEXT_MAX}
-				</div>
-				<button
-					type="button"
-					onClick={toggleRecord}
-					disabled={transcribing}
-					aria-label={recording ? "Stop recording" : "Record voice"}
-					className="absolute right-4 bottom-3 flex h-10 w-10 items-center justify-center rounded-full transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-					style={{
-						backgroundColor: recording ? "var(--ember-terracotta)" : "transparent",
-						color: recording ? "#fff" : "var(--ember-warm-gray)",
-						border: recording
-							? "1px solid var(--ember-terracotta)"
-							: "1px solid var(--ember-divider)",
-					}}
-				>
-					{transcribing ? (
-						<svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-							<circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" opacity="0.25" />
-							<path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-						</svg>
-					) : recording ? (
-						<span className="block h-2.5 w-2.5 rounded-full bg-white animate-pulse" />
-					) : (
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5" aria-hidden="true">
-							<rect x="9" y="3" width="6" height="12" rx="3" />
-							<path d="M5 11v1a7 7 0 0 0 14 0v-1" />
-							<line x1="12" y1="19" x2="12" y2="22" />
-						</svg>
-					)}
-				</button>
-			</div>
+			<EmberTextArea
+				value={text}
+				onChange={setText}
+				placeholder="Start writing"
+				max={TEXT_MAX}
+				rows={6}
+				autoFocus={autoFocus}
+			/>
 
 			<input
 				ref={fileInputRef}
@@ -225,7 +109,7 @@ export function EntryComposer({
 			{photoDataUrl ? (
 				<div
 					className="relative rounded-2xl overflow-hidden"
-					style={{ backgroundColor: "var(--ember-cream-light)" }}
+					style={{ backgroundColor: "var(--ember-input)" }}
 				>
 					<img
 						src={photoDataUrl}
@@ -234,9 +118,7 @@ export function EntryComposer({
 					/>
 					<div
 						className="flex items-center justify-end gap-3 px-4 py-2"
-						style={{
-							borderTop: "1px solid var(--ember-divider)",
-						}}
+						style={{ borderTop: "1px solid var(--ember-divider)" }}
 					>
 						<button
 							type="button"
@@ -287,13 +169,11 @@ export function EntryComposer({
 			)}
 
 			{photoError && (
-				<p className="text-sm" style={{ color: "var(--ember-terracotta)" }}>
+				<p
+					className="text-sm"
+					style={{ color: "var(--ember-terracotta)" }}
+				>
 					{photoError}
-				</p>
-			)}
-			{recError && (
-				<p className="text-sm" style={{ color: "var(--ember-terracotta)" }}>
-					{recError}
 				</p>
 			)}
 
@@ -311,15 +191,10 @@ export function EntryComposer({
 				<button
 					type="submit"
 					disabled={!canSave}
-					className="group relative inline-flex items-center justify-center rounded-full pl-6 pr-14 py-3.5 text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-					style={{ backgroundColor: "var(--ember-ink)" }}
+					className="ember-cta ember-cta-with-arrow"
 				>
 					<span>{saveLabel}</span>
-					<span
-						aria-hidden="true"
-						className="absolute right-2 flex h-9 w-9 items-center justify-center rounded-full"
-						style={{ backgroundColor: "rgba(255,255,255,0.12)" }}
-					>
+					<span aria-hidden="true" className="ember-cta-arrow">
 						<svg
 							viewBox="0 0 24 24"
 							fill="none"

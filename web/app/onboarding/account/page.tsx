@@ -64,7 +64,7 @@ export default function AccountPage({ searchParams }: { searchParams: SearchPara
 		login.error instanceof ApiError ? login.error.message : null
 
 	return (
-		<main className="min-h-dvh bg-[color:var(--ember-card)]">
+		<main className="min-h-dvh bg-[color:var(--ember-cream)]">
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-12 sm:px-8">
 				<button
 					type="button"

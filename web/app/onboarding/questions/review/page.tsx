@@ -151,7 +151,7 @@ export default function ReviewQuestionsPage() {
 	}
 
 	return (
-		<main className="min-h-dvh bg-[color:var(--ember-card)]">
+		<main className="min-h-dvh bg-[color:var(--ember-cream)]">
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-12 sm:px-8">
 				<button
 					type="button"
@@ -174,8 +174,8 @@ export default function ReviewQuestionsPage() {
 				</button>
 
 				<header className="mt-6 mb-6">
-					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)]">
-						Your questions.
+					<h1 className="mb-3 font-serif text-[40px] sm:text-[44px] tracking-tight leading-[1.05] text-[color:var(--ember-ink)]">
+						Your <span className="italic" style={{ color: "var(--ember-terracotta)" }}>questions</span>.
 					</h1>
 					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						Edit or remove. {items.length} selected.
@@ -198,7 +198,7 @@ export default function ReviewQuestionsPage() {
 										value={draftText}
 										onChange={(e) => setDraftText(e.target.value)}
 										rows={3}
-										className="flex-1 resize-none rounded-xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] px-3 py-2.5 text-base text-[color:var(--ember-ink)] outline-none focus:border-neutral-900 transition-colors"
+										className="flex-1 resize-none rounded-xl bg-[color:var(--ember-input)] px-3 py-2.5 text-base font-serif italic text-[color:var(--ember-ink)] placeholder:italic outline-none transition-colors"
 									/>
 								</div>
 								<div className="mt-3 flex items-center justify-end gap-3">

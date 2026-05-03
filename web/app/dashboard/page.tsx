@@ -62,11 +62,11 @@ export default function DashboardPage() {
 	if (!hydrated || !sentAt) return null
 
 	return (
-		<main className="min-h-dvh bg-[color:var(--ember-card)]">
+		<main className="min-h-dvh bg-[color:var(--ember-cream)]">
 			<div className="mx-auto w-full max-w-md px-6 pt-10 pb-12 sm:px-8">
 				<header className="mb-8">
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)] mb-2">
-						For {recipientName}.
+					<h1 className="font-serif text-[40px] sm:text-[44px] tracking-tight leading-[1.05] text-[color:var(--ember-ink)] mb-2">
+						For <span className="italic" style={{ color: "var(--ember-terracotta)" }}>{recipientName}</span>.
 					</h1>
 					<p className="text-sm text-[color:var(--ember-warm-gray)]">
 						Sent {formatDate(sentAt)} · {deliveryLabel}

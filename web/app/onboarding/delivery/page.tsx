@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { EmberListCard } from "@/components/ember/EmberChrome"
 import { useOnboardingState } from "../_lib/state"
 
 type DeliveryMethod = "email" | "physical" | "in-person"
@@ -58,7 +59,7 @@ export default function DeliveryPage() {
 	}
 
 	return (
-		<main className="min-h-dvh bg-[color:var(--ember-card)]">
+		<main className="min-h-dvh bg-[color:var(--ember-cream)]">
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-12 sm:px-8">
 				<button
 					type="button"
@@ -81,8 +82,8 @@ export default function DeliveryPage() {
 				</button>
 
 				<header className="mt-6 mb-8">
-					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)]">
-						How would you like to give this gift?
+					<h1 className="mb-3 font-serif text-[40px] sm:text-[44px] tracking-tight leading-[1.05] text-[color:var(--ember-ink)]">
+						How would you like to <span className="italic" style={{ color: "var(--ember-terracotta)" }}>give</span> this gift?
 					</h1>
 					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						You can change your mind before sending.
@@ -93,48 +94,42 @@ export default function DeliveryPage() {
 					{OPTIONS.map((opt) => {
 						const isSelected = selected === opt.id && !opt.disabled
 						return (
-							<button
+							<EmberListCard
 								key={opt.id}
-								type="button"
+								title={opt.title}
+								subtitle={opt.subtitle}
 								onClick={() => select(opt.id)}
 								disabled={opt.disabled}
-								aria-pressed={isSelected}
-								className={`w-full text-left rounded-2xl border bg-[color:var(--ember-card)] px-5 py-4 transition-colors ${
-									opt.disabled
-										? "border-[color:var(--ember-divider)] cursor-not-allowed opacity-60"
-										: isSelected
-											? "border-neutral-900"
-											: "border-[color:var(--ember-divider)] hover:border-[color:var(--ember-divider)] hover:bg-[color:var(--ember-cream-light)]"
-								}`}
-							>
-								<div className="flex items-center justify-between gap-4">
-									<div className="min-w-0">
-										<div className="text-base font-semibold text-[color:var(--ember-ink)]">
-											{opt.title}
-										</div>
-										<div className="mt-0.5 text-sm text-[color:var(--ember-warm-gray)]">
-											{opt.subtitle}
-										</div>
-									</div>
-									{opt.badge ? (
-										<span className="shrink-0 rounded-md border border-[color:var(--ember-divider)] px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-[color:var(--ember-warm-gray)]">
+								right={
+									opt.badge ? (
+										<span
+											className="shrink-0 rounded-full px-3 py-1 text-[10px] font-medium tracking-[0.18em] uppercase"
+											style={{
+												border: "1px solid var(--ember-divider)",
+												color: "var(--ember-warm-gray)",
+											}}
+										>
 											{opt.badge}
 										</span>
 									) : (
 										<span
-											className={`shrink-0 flex h-5 w-5 items-center justify-center rounded-full border ${
-												isSelected
-													? "border-neutral-900 bg-[color:var(--ember-ink)]"
-													: "border-[color:var(--ember-divider)] bg-[color:var(--ember-card)]"
-											}`}
+											className="shrink-0 flex h-5 w-5 items-center justify-center rounded-full"
+											style={{
+												border: isSelected
+													? "1px solid var(--ember-ink)"
+													: "1px solid var(--ember-divider)",
+												backgroundColor: isSelected
+													? "var(--ember-ink)"
+													: "transparent",
+											}}
 										>
 											{isSelected && (
-												<span className="block h-2 w-2 rounded-full bg-[color:var(--ember-card)]" />
+												<span className="block h-2 w-2 rounded-full bg-white" />
 											)}
 										</span>
-									)}
-								</div>
-							</button>
+									)
+								}
+							/>
 						)
 					})}
 				</div>

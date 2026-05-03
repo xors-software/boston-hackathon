@@ -147,8 +147,8 @@ export default function ShareWhenPage() {
 					>
 						Sharing
 					</p>
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)] mb-3">
-						How and when to share.
+					<h1 className="font-serif text-[40px] sm:text-[44px] tracking-tight leading-[1.05] text-[color:var(--ember-ink)] mb-3">
+						How and <span className="italic" style={{ color: "var(--ember-terracotta)" }}>when</span> to share.
 					</h1>
 					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						Your journal is yours. If you'd like to share it, you choose when —

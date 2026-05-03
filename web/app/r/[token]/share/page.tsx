@@ -64,7 +64,7 @@ export default function SharePage() {
 					<p className="text-[11px] font-medium tracking-[0.18em] uppercase text-[color:var(--ember-warm-gray)] mb-3">
 						Settings · Sharing
 					</p>
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)] mb-4">
+					<h1 className="font-serif text-[40px] sm:text-[44px] tracking-tight leading-[1.05] text-[color:var(--ember-ink)] mb-4">
 						Sharing
 					</h1>
 					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">

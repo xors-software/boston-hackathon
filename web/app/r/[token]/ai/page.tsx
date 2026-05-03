@@ -227,8 +227,8 @@ export default function ParentAiChatPage() {
 					>
 						Talk it through
 					</p>
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)] mb-2">
-						Tell me what's on your mind.
+					<h1 className="font-serif text-[40px] sm:text-[44px] tracking-tight leading-[1.05] text-[color:var(--ember-ink)] mb-2">
+						Tell me what's on your <span className="italic" style={{ color: "var(--ember-terracotta)" }}>mind</span>.
 					</h1>
 					<p className="text-sm text-[color:var(--ember-warm-gray)] leading-relaxed">
 						I'll keep you company. When you're ready, save what you said as a

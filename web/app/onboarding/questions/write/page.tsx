@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { type ChangeEvent, type FormEvent, useEffect, useRef, useState } from "react"
+import { EmberTextArea } from "@/components/ember/EmberTextArea"
 import { useOnboardingState } from "../../_lib/state"
 import { getStoredGiftId, useEnsureGift } from "../../_lib/sync"
 
@@ -153,7 +154,7 @@ export default function WriteQuestionPage() {
 	}
 
 	return (
-		<main className="min-h-dvh bg-[color:var(--ember-card)]">
+		<main className="min-h-dvh bg-[color:var(--ember-cream)]">
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-12 sm:px-8">
 				<button
 					type="button"
@@ -176,8 +177,8 @@ export default function WriteQuestionPage() {
 				</button>
 
 				<header className="mt-6 mb-6">
-					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)]">
-						Write your own question.
+					<h1 className="mb-3 font-serif text-[40px] sm:text-[44px] tracking-tight leading-[1.05] text-[color:var(--ember-ink)]">
+						Write your <span className="italic" style={{ color: "var(--ember-terracotta)" }}>own</span> question.
 					</h1>
 					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						Make it specific. The best ones are.
@@ -186,21 +187,18 @@ export default function WriteQuestionPage() {
 
 				<form onSubmit={handleSubmit} className="flex flex-col gap-5">
 					<label className="flex flex-col gap-2">
-						<span className="text-sm font-medium text-[color:var(--ember-warm-gray)]">
+						<span className="text-[11px] font-medium tracking-[0.22em] uppercase text-[color:var(--ember-warm-gray)]">
 							Question
 						</span>
-						<div className="relative rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] focus-within:border-neutral-900 transition-colors">
-							<textarea
-								value={text}
-								onChange={(e) => setText(e.target.value.slice(0, QUESTION_MAX))}
-								placeholder="What were you thinking about on the drive home from the hospital?"
-								rows={4}
-								className="block w-full resize-none rounded-2xl bg-transparent px-4 pt-3 pb-7 text-base text-[color:var(--ember-ink)] placeholder:text-[color:var(--ember-soft-gray)] outline-none"
-							/>
-							<div className="pointer-events-none absolute left-4 bottom-2 text-xs text-[color:var(--ember-soft-gray)]">
-								{text.length} / {QUESTION_MAX}
-							</div>
-						</div>
+						<EmberTextArea
+							value={text}
+							onChange={setText}
+							placeholder="What were you thinking about on the drive home from the hospital?"
+							rows={4}
+							max={QUESTION_MAX}
+							autoFocus
+							withMic={false}
+						/>
 					</label>
 
 					<div className="flex flex-col gap-2">
@@ -218,7 +216,7 @@ export default function WriteQuestionPage() {
 							<div className="relative rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-cream-light)] overflow-hidden">
 								<img
 									src={photoPreview}
-									alt="Preview of the attachment"
+									alt="Question photo preview"
 									className="block w-full max-h-64 object-cover"
 								/>
 								<div className="flex items-center justify-end gap-3 px-4 py-2 bg-[color:var(--ember-card)] border-t border-[color:var(--ember-divider)]">
