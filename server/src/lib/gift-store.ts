@@ -2,10 +2,12 @@ import { and, asc, desc, eq, gt, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import {
 	gifts as giftsTable,
+	journalEntries as journalEntriesTable,
 	people as peopleTable,
 	questions as questionsTable,
 	recipients as recipientsTable,
 	responses as responsesTable,
+	sharing as sharingTable,
 } from "../db/schema";
 import { genId, genToken } from "./ids";
 
@@ -54,6 +56,7 @@ export interface Recipient {
 	accessToken: string;
 	email: string;
 	name: string;
+	accountCreatedAt: string | null;
 	firstSeenAt: string | null;
 	lastActiveAt: string | null;
 }
@@ -81,6 +84,7 @@ export interface Gift {
 	delivery: GiftDelivery;
 	recipientName: string;
 	recipientEmail: string | null;
+	personalMessage: string | null;
 	currentStep: OnboardingStep;
 	status: GiftStatus;
 	sentAt: string | null;
@@ -117,6 +121,7 @@ function rowToGift(row: DbGift): Gift {
 		delivery: row.delivery,
 		recipientName: row.recipientName,
 		recipientEmail: row.recipientEmail,
+		personalMessage: row.personalMessage,
 		currentStep: row.currentStep,
 		status: row.status,
 		sentAt: isoOrNull(row.sentAt),
@@ -160,6 +165,7 @@ function rowToRecipient(row: DbRecipient): Recipient {
 		accessToken: row.accessToken,
 		email: row.email,
 		name: row.name,
+		accountCreatedAt: isoOrNull(row.accountCreatedAt),
 		firstSeenAt: isoOrNull(row.firstSeenAt),
 		lastActiveAt: isoOrNull(row.lastActiveAt),
 	};
@@ -241,6 +247,7 @@ export type GiftPatch = Partial<
 		| "delivery"
 		| "recipientName"
 		| "recipientEmail"
+		| "personalMessage"
 		| "currentStep"
 		| "timeLockAt"
 	>
@@ -261,6 +268,7 @@ export async function patchGift(
 		"delivery",
 		"recipientName",
 		"recipientEmail",
+		"personalMessage",
 		"currentStep",
 	]);
 	if (patch.timeLockAt !== undefined) {
@@ -744,4 +752,394 @@ export async function deleteResponse(
 		.where(and(eq(responsesTable.giftId, giftId), eq(responsesTable.id, rid)))
 		.returning({ id: responsesTable.id });
 	return result.length > 0;
+}
+
+// -------- Journal entries (parent flow) --------
+
+export type EntrySource = "free-write" | "prompt" | "ai" | "voice" | "photo";
+
+export interface JournalEntry {
+	id: string;
+	recipientId: string;
+	giftId: string;
+	source: EntrySource;
+	text: string | null;
+	promptId: string | null;
+	promptText: string | null;
+	photoUrl: string | null;
+	audioUrl: string | null;
+	durationSeconds: number | null;
+	preface: string | null;
+	createdAt: string;
+}
+
+type DbJournalEntry = typeof journalEntriesTable.$inferSelect;
+
+function rowToEntry(row: DbJournalEntry): JournalEntry {
+	return {
+		id: row.id,
+		recipientId: row.recipientId,
+		giftId: row.giftId,
+		source: row.source,
+		text: row.text,
+		promptId: row.promptId,
+		promptText: row.promptText,
+		photoUrl: row.photoUrl,
+		audioUrl: row.audioUrl,
+		durationSeconds: row.durationSeconds,
+		preface: row.preface,
+		createdAt: row.createdAt.toISOString(),
+	};
+}
+
+export interface CreateEntryInput {
+	source: EntrySource;
+	text?: string | null;
+	promptId?: string | null;
+	promptText?: string | null;
+	photoUrl?: string | null;
+	audioUrl?: string | null;
+	durationSeconds?: number | null;
+	preface?: string | null;
+}
+
+export async function createEntry(
+	giftId: string,
+	recipientId: string,
+	input: CreateEntryInput,
+): Promise<JournalEntry> {
+	const [row] = await db
+		.insert(journalEntriesTable)
+		.values({
+			id: genId("e"),
+			giftId,
+			recipientId,
+			source: input.source,
+			text: input.text ?? null,
+			promptId: input.promptId ?? null,
+			promptText: input.promptText ?? null,
+			photoUrl: input.photoUrl ?? null,
+			audioUrl: input.audioUrl ?? null,
+			durationSeconds: input.durationSeconds ?? null,
+			preface: input.preface ?? null,
+		})
+		.returning();
+	return rowToEntry(row);
+}
+
+export async function listEntries(
+	recipientId: string,
+): Promise<JournalEntry[]> {
+	const rows = await db
+		.select()
+		.from(journalEntriesTable)
+		.where(eq(journalEntriesTable.recipientId, recipientId))
+		.orderBy(desc(journalEntriesTable.createdAt));
+	return rows.map(rowToEntry);
+}
+
+export async function getEntry(
+	recipientId: string,
+	eid: string,
+): Promise<JournalEntry | null> {
+	const [row] = await db
+		.select()
+		.from(journalEntriesTable)
+		.where(
+			and(
+				eq(journalEntriesTable.recipientId, recipientId),
+				eq(journalEntriesTable.id, eid),
+			),
+		);
+	return row ? rowToEntry(row) : null;
+}
+
+export type EntryPatch = Partial<
+	Pick<JournalEntry, "text" | "promptText" | "preface" | "durationSeconds">
+> & {
+	photoUrl?: string | null;
+	audioUrl?: string | null;
+};
+
+export async function patchEntry(
+	recipientId: string,
+	eid: string,
+	patch: EntryPatch,
+): Promise<JournalEntry | null> {
+	const update: Partial<typeof journalEntriesTable.$inferInsert> = {};
+	assignDefined(update, patch, [
+		"text",
+		"promptText",
+		"preface",
+		"durationSeconds",
+		"photoUrl",
+		"audioUrl",
+	]);
+	if (Object.keys(update).length === 0) {
+		return getEntry(recipientId, eid);
+	}
+	const [row] = await db
+		.update(journalEntriesTable)
+		.set(update)
+		.where(
+			and(
+				eq(journalEntriesTable.recipientId, recipientId),
+				eq(journalEntriesTable.id, eid),
+			),
+		)
+		.returning();
+	return row ? rowToEntry(row) : null;
+}
+
+export async function deleteEntry(
+	recipientId: string,
+	eid: string,
+): Promise<boolean> {
+	const removed = await db
+		.delete(journalEntriesTable)
+		.where(
+			and(
+				eq(journalEntriesTable.recipientId, recipientId),
+				eq(journalEntriesTable.id, eid),
+			),
+		)
+		.returning({ id: journalEntriesTable.id });
+	return removed.length > 0;
+}
+
+// -------- Sharing (parent flow) --------
+
+export type SharingMode = "when-ready" | "legacy" | "date" | "milestone";
+export type MilestonePreset =
+	| "future-birthday"
+	| "anniversary"
+	| "in-one-year"
+	| "custom";
+
+export interface SharingState {
+	recipientId: string;
+	mode: SharingMode;
+	date: string | null;
+	milestonePreset: MilestonePreset | null;
+	milestoneText: string | null;
+	sharedAt: string | null;
+	lastSharedSnapshotCount: number | null;
+}
+
+type DbSharing = typeof sharingTable.$inferSelect;
+
+function rowToSharing(row: DbSharing): SharingState {
+	return {
+		recipientId: row.recipientId,
+		mode: row.mode,
+		date: row.date,
+		milestonePreset: row.milestonePreset,
+		milestoneText: row.milestoneText,
+		sharedAt: isoOrNull(row.sharedAt),
+		lastSharedSnapshotCount: row.lastSharedSnapshotCount,
+	};
+}
+
+const DEFAULT_SHARING_STATE = (recipientId: string): SharingState => ({
+	recipientId,
+	mode: "when-ready",
+	date: null,
+	milestonePreset: null,
+	milestoneText: null,
+	sharedAt: null,
+	lastSharedSnapshotCount: null,
+});
+
+export async function getSharing(recipientId: string): Promise<SharingState> {
+	const [row] = await db
+		.select()
+		.from(sharingTable)
+		.where(eq(sharingTable.recipientId, recipientId));
+	if (!row) return DEFAULT_SHARING_STATE(recipientId);
+	return rowToSharing(row);
+}
+
+export interface SharingPatch {
+	mode?: SharingMode;
+	date?: string | null;
+	milestonePreset?: MilestonePreset | null;
+	milestoneText?: string | null;
+}
+
+// Once `sharedAt` is set, the journal is archived — block writes
+// to keep the snapshot stable.
+export class SharingLockedError extends Error {
+	constructor(message = "Journal is shared and locked") {
+		super(message);
+	}
+}
+
+export async function patchSharing(
+	recipientId: string,
+	patch: SharingPatch,
+): Promise<SharingState> {
+	const current = await getSharing(recipientId);
+	if (current.sharedAt) throw new SharingLockedError();
+
+	const values = {
+		recipientId,
+		mode: patch.mode ?? current.mode,
+		date: patch.date !== undefined ? patch.date : current.date,
+		milestonePreset:
+			patch.milestonePreset !== undefined
+				? patch.milestonePreset
+				: current.milestonePreset,
+		milestoneText:
+			patch.milestoneText !== undefined
+				? patch.milestoneText
+				: current.milestoneText,
+	};
+
+	// Upsert (recipient_id is the PK).
+	const [row] = await db
+		.insert(sharingTable)
+		.values(values)
+		.onConflictDoUpdate({
+			target: sharingTable.recipientId,
+			set: {
+				mode: values.mode,
+				date: values.date,
+				milestonePreset: values.milestonePreset,
+				milestoneText: values.milestoneText,
+			},
+		})
+		.returning();
+	return rowToSharing(row);
+}
+
+export interface ShareResult {
+	sharing: SharingState;
+	alreadyShared: boolean;
+}
+
+export async function performShare(
+	recipientId: string,
+): Promise<ShareResult> {
+	const current = await getSharing(recipientId);
+	if (current.sharedAt) {
+		return { sharing: current, alreadyShared: true };
+	}
+
+	return db.transaction(async (tx) => {
+		const [{ count }] = await tx
+			.select({ count: sql<number>`count(*)::int` })
+			.from(journalEntriesTable)
+			.where(eq(journalEntriesTable.recipientId, recipientId));
+
+		const now = new Date();
+		const [row] = await tx
+			.insert(sharingTable)
+			.values({
+				recipientId,
+				mode: current.mode,
+				date: current.date,
+				milestonePreset: current.milestonePreset,
+				milestoneText: current.milestoneText,
+				sharedAt: now,
+				lastSharedSnapshotCount: Number(count),
+			})
+			.onConflictDoUpdate({
+				target: sharingTable.recipientId,
+				set: {
+					sharedAt: now,
+					lastSharedSnapshotCount: Number(count),
+				},
+			})
+			.returning();
+		return { sharing: rowToSharing(row), alreadyShared: false };
+	});
+}
+
+export async function isJournalArchived(recipientId: string): Promise<boolean> {
+	const [row] = await db
+		.select({ sharedAt: sharingTable.sharedAt })
+		.from(sharingTable)
+		.where(eq(sharingTable.recipientId, recipientId));
+	return Boolean(row?.sharedAt);
+}
+
+// -------- Recipient account credentials --------
+
+// Stored as `bun-bcrypt` style salted hash; we lean on Bun's
+// `password.hash`/`verify` rather than pulling in a bcrypt dep.
+export async function setRecipientCredentials(
+	token: string,
+	email: string,
+	password: string,
+): Promise<Recipient | null> {
+	const hash = await Bun.password.hash(password);
+	const [row] = await db
+		.update(recipientsTable)
+		.set({
+			email: email.trim().toLowerCase(),
+			passwordHash: hash,
+			accountCreatedAt: sql`coalesce(${recipientsTable.accountCreatedAt}, now())`,
+		})
+		.where(eq(recipientsTable.accessToken, token))
+		.returning();
+	return row ? rowToRecipient(row) : null;
+}
+
+export async function recipientLogin(
+	email: string,
+	password: string,
+): Promise<Recipient | null> {
+	const normalized = email.trim().toLowerCase();
+	const [row] = await db
+		.select()
+		.from(recipientsTable)
+		.where(eq(recipientsTable.email, normalized));
+	if (!row?.passwordHash) return null;
+	const ok = await Bun.password.verify(password, row.passwordHash);
+	if (!ok) return null;
+	return rowToRecipient(row);
+}
+
+// Used by the recipient-side login + by tests that need to know whether
+// an email is already taken without leaking the outcome to the caller.
+export async function recipientHasAccount(token: string): Promise<boolean> {
+	const [row] = await db
+		.select({ accountCreatedAt: recipientsTable.accountCreatedAt })
+		.from(recipientsTable)
+		.where(eq(recipientsTable.accessToken, token));
+	return Boolean(row?.accountCreatedAt);
+}
+
+// -------- Eager loaders for the recipient envelope --------
+
+export async function listEntriesForToken(
+	token: string,
+): Promise<JournalEntry[] | null> {
+	const found = await loadByToken(token);
+	if (!found) return null;
+	return listEntries(found.recipient.id);
+}
+
+// Convenience used by routes that need to confirm a token is valid AND
+// that the journal is not yet archived in a single round-trip.
+export async function loadByTokenWithGuards(
+	token: string,
+): Promise<
+	{ gift: Gift; recipient: Recipient; sharing: SharingState; archived: boolean } | null
+> {
+	const found = await loadByToken(token);
+	if (!found) return null;
+	const sharing = await getSharing(found.recipient.id);
+	return {
+		...found,
+		sharing,
+		archived: Boolean(sharing.sharedAt),
+	};
+}
+
+// Test-only helper to wipe parent-flow rows between integration runs
+// without touching gifts/users.
+export async function _resetRecipientDataForTests(): Promise<void> {
+	await db.delete(journalEntriesTable);
+	await db.delete(sharingTable);
 }

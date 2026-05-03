@@ -22,7 +22,7 @@ export default function ParentAccountPage() {
 
 	useEffect(() => {
 		if (hydrated) markStep("account")
-	}, [hydrated])
+	}, [hydrated, markStep])
 
 	useEffect(() => {
 		if (!hydrated) return

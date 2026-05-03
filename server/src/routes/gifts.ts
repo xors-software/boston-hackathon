@@ -83,6 +83,7 @@ const giftSchema = t.Object({
 	delivery: deliverySchema,
 	recipientName: t.String(),
 	recipientEmail: t.Union([t.String(), t.Null()]),
+	personalMessage: t.Union([t.String(), t.Null()]),
 	currentStep: stepSchema,
 	status: statusSchema,
 	sentAt: t.Union([t.String(), t.Null()]),
@@ -197,6 +198,9 @@ export const giftsRoutes = new Elysia({ prefix: "/gifts" })
 				delivery: t.Optional(deliverySchema),
 				recipientName: t.Optional(t.String({ maxLength: 200 })),
 				recipientEmail: t.Optional(t.Union([t.String({ maxLength: 320 }), t.Null()])),
+				personalMessage: t.Optional(
+					t.Union([t.String({ maxLength: 8000 }), t.Null()]),
+				),
 				currentStep: t.Optional(stepSchema),
 				timeLockAt: t.Optional(t.Union([t.String(), t.Null()])),
 			}),

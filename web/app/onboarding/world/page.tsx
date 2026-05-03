@@ -312,7 +312,7 @@ function PersonForm({
 				if (e.data.size > 0) chunksRef.current.push(e.data)
 			}
 			mr.onstop = async () => {
-				stream.getTracks().forEach((t) => t.stop())
+				for (const t of stream.getTracks()) t.stop()
 				const blob = new Blob(chunksRef.current, {
 					type: mr.mimeType || "audio/webm",
 				})
@@ -382,7 +382,6 @@ function PersonForm({
 						placeholder="Name"
 						value={person.name}
 						onChange={(e) => onChange({ ...person, name: e.target.value })}
-						autoFocus
 						className="w-full rounded-xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] px-3 py-2.5 text-base text-[color:var(--ember-ink)] placeholder:text-[color:var(--ember-soft-gray)] outline-none focus:border-neutral-900 transition-colors"
 					/>
 					<input

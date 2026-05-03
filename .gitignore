@@ -45,3 +45,6 @@ next-env.d.ts
 
 # elysia
 server/dist
+
+# claude code worktree + runtime artifacts
+.claude/

@@ -42,7 +42,12 @@
 			},
 			"a11y": {
 				"useValidAnchor": "warn",
-				"useButtonType": "warn"
+				"useButtonType": "warn",
+				"noSvgWithoutTitle": "off",
+				"noRedundantAlt": "warn"
+			},
+			"performance": {
+				"noImgElement": "off"
 			}
 		}
 	},

@@ -39,7 +39,7 @@ export default function HowEmberWorksPage() {
 
 	useEffect(() => {
 		if (hydrated) markStep("how-it-works")
-	}, [hydrated])
+	}, [hydrated, markStep])
 
 	const handleContinue = () => {
 		update({ step: "account" })

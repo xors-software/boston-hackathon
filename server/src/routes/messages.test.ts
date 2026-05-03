@@ -76,7 +76,11 @@ function stubViewerFetch(byKey: Record<string, FakeViewer | null>): {
 		}
 		return realFetch(input, init);
 	}) as typeof fetch;
-	return { restore: () => (globalThis.fetch = realFetch) };
+	return {
+		restore: () => {
+			globalThis.fetch = realFetch;
+		},
+	};
 }
 
 describe("messages routes — authenticated", () => {

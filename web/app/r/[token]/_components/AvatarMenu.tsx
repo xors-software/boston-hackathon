@@ -43,7 +43,7 @@ export function AvatarMenu({
 				if (k && (k.startsWith("ember:parent:") || k === "ember:onboarding:v1"))
 					keys.push(k)
 			}
-			keys.forEach((k) => localStorage.removeItem(k))
+			for (const k of keys) localStorage.removeItem(k)
 		} catch {}
 		router.push("/login")
 	}

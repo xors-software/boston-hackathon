@@ -1,7 +1,7 @@
 "use client"
 
 import { useParams, useRouter } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { AvatarMenu } from "../_components/AvatarMenu"
 import { BottomTabs } from "../_components/BottomTabs"
 import {

@@ -37,7 +37,7 @@ export default function WhyPage() {
 				if (e.data && e.data.size > 0) chunksRef.current.push(e.data)
 			}
 			mr.onstop = async () => {
-				stream.getTracks().forEach((t) => t.stop())
+				for (const t of stream.getTracks()) t.stop()
 				const blob = new Blob(chunksRef.current, {
 					type: mr.mimeType || "audio/webm",
 				})

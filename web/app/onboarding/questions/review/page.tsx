@@ -197,7 +197,6 @@ export default function ReviewQuestionsPage() {
 									<textarea
 										value={draftText}
 										onChange={(e) => setDraftText(e.target.value)}
-										autoFocus
 										rows={3}
 										className="flex-1 resize-none rounded-xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] px-3 py-2.5 text-base text-[color:var(--ember-ink)] outline-none focus:border-neutral-900 transition-colors"
 									/>
@@ -231,13 +230,8 @@ export default function ReviewQuestionsPage() {
 										</span>
 										<span className="text-base text-[color:var(--ember-ink)] leading-snug">
 											{item.text}
-<<<<<<< Updated upstream
 											{item.photoUrl && (
-												<span className="text-neutral-500"> — with photo</span>
-=======
-											{item.photoDataUrl && (
 												<span className="text-[color:var(--ember-warm-gray)]"> — with photo</span>
->>>>>>> Stashed changes
 											)}
 										</span>
 									</div>

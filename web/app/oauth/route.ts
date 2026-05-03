@@ -44,7 +44,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 	if (!sessionKey) return loginRedirect("oauth_empty_key")
 
 	// Same-app paths only — open-redirect guard.
-	const baseDest = nextHint && nextHint.startsWith("/") ? nextHint : "/"
+	const baseDest = nextHint?.startsWith("/") ? nextHint : "/"
 	const destUrl = new URL(baseDest, baseUrl)
 	destUrl.searchParams.set("signed_in", "google")
 	const res = NextResponse.redirect(destUrl)

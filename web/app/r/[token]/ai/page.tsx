@@ -1,7 +1,7 @@
 "use client"
 
 import { useParams, useRouter } from "next/navigation"
-import { type FormEvent, useEffect, useRef, useState } from "react"
+import { type FormEvent, useCallback, useEffect, useRef, useState } from "react"
 import { type JournalEntry, newEntryId } from "../_lib/entries"
 import { isArchived } from "../_lib/sharing"
 import { useParentState } from "../_lib/state"
@@ -31,20 +31,9 @@ export default function ParentAiChatPage() {
 	const userTurns = messages.filter((m) => m.role === "user").length
 	const archived = hydrated && isArchived(state.data)
 
-	// Open with the first AI message
-	useEffect(() => {
-		if (!hydrated || initRef.current) return
-		initRef.current = true
-		void converse([])
-	}, [hydrated])
-
-	useEffect(() => {
-		const el = scrollRef.current
-		if (!el) return
-		el.scrollTo({ top: el.scrollHeight, behavior: "smooth" })
-	}, [messages, sending])
-
-	async function converse(history: ChatMessage[]) {
+	// Stable across renders so the effect below doesn't re-fire on
+	// every render; only set-state from React, no other deps.
+	const converse = useCallback(async (history: ChatMessage[]) => {
 		setSending(true)
 		setError(null)
 		try {
@@ -68,7 +57,20 @@ export default function ParentAiChatPage() {
 		} finally {
 			setSending(false)
 		}
-	}
+	}, [])
+
+	// Open with the first AI message
+	useEffect(() => {
+		if (!hydrated || initRef.current) return
+		initRef.current = true
+		void converse([])
+	}, [hydrated, converse])
+
+	useEffect(() => {
+		const el = scrollRef.current
+		if (!el) return
+		el.scrollTo({ top: el.scrollHeight, behavior: "smooth" })
+	}, [])
 
 	const onSubmit = async (e: FormEvent) => {
 		e.preventDefault()
@@ -129,7 +131,7 @@ export default function ParentAiChatPage() {
 				if (e.data.size > 0) chunksRef.current.push(e.data)
 			}
 			mr.onstop = async () => {
-				stream.getTracks().forEach((t) => t.stop())
+				for (const t of stream.getTracks()) t.stop()
 				const blob = new Blob(chunksRef.current, {
 					type: mr.mimeType || "audio/webm",
 				})

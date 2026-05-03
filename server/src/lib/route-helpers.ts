@@ -28,6 +28,60 @@ export const responseSchema = t.Object({
 	recordedAt: t.String(),
 });
 
+export const entrySourceSchema = t.Union([
+	t.Literal("free-write"),
+	t.Literal("prompt"),
+	t.Literal("ai"),
+	t.Literal("voice"),
+	t.Literal("photo"),
+]);
+
+export const journalEntrySchema = t.Object({
+	id: t.String(),
+	recipientId: t.String(),
+	giftId: t.String(),
+	source: entrySourceSchema,
+	text: t.Union([t.String(), t.Null()]),
+	promptId: t.Union([t.String(), t.Null()]),
+	promptText: t.Union([t.String(), t.Null()]),
+	photoUrl: t.Union([t.String(), t.Null()]),
+	audioUrl: t.Union([t.String(), t.Null()]),
+	durationSeconds: t.Union([t.Number(), t.Null()]),
+	preface: t.Union([t.String(), t.Null()]),
+	createdAt: t.String(),
+});
+
+export const sharingModeSchema = t.Union([
+	t.Literal("when-ready"),
+	t.Literal("legacy"),
+	t.Literal("date"),
+	t.Literal("milestone"),
+]);
+
+export const milestonePresetSchema = t.Union([
+	t.Literal("future-birthday"),
+	t.Literal("anniversary"),
+	t.Literal("in-one-year"),
+	t.Literal("custom"),
+]);
+
+export const sharingStateSchema = t.Object({
+	recipientId: t.String(),
+	mode: sharingModeSchema,
+	date: t.Union([t.String(), t.Null()]),
+	milestonePreset: t.Union([milestonePresetSchema, t.Null()]),
+	milestoneText: t.Union([t.String(), t.Null()]),
+	sharedAt: t.Union([t.String(), t.Null()]),
+	lastSharedSnapshotCount: t.Union([t.Number(), t.Null()]),
+});
+
+export const parentPromptSchema = t.Object({
+	id: t.String(),
+	text: t.String(),
+	preface: t.Union([t.String(), t.Null()]),
+	photoUrl: t.Union([t.String(), t.Null()]),
+});
+
 interface RouteCtx {
 	currentUser: AppUser | null;
 	set: { status?: number | string };

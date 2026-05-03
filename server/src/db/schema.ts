@@ -1,4 +1,5 @@
 import {
+	date,
 	index,
 	integer,
 	pgEnum,
@@ -45,6 +46,28 @@ export const responseKindEnum = pgEnum("response_kind", [
 	"text",
 	"voice",
 	"photo",
+]);
+
+export const entrySourceEnum = pgEnum("entry_source", [
+	"free-write",
+	"prompt",
+	"ai",
+	"voice",
+	"photo",
+]);
+
+export const sharingModeEnum = pgEnum("sharing_mode", [
+	"when-ready",
+	"legacy",
+	"date",
+	"milestone",
+]);
+
+export const milestonePresetEnum = pgEnum("milestone_preset", [
+	"future-birthday",
+	"anniversary",
+	"in-one-year",
+	"custom",
 ]);
 
 export const users = pgTable(
@@ -94,6 +117,7 @@ export const gifts = pgTable(
 		delivery: deliveryEnum("delivery").notNull().default("email"),
 		recipientName: text("recipient_name").notNull().default("Them"),
 		recipientEmail: text("recipient_email"),
+		personalMessage: text("personal_message"),
 		currentStep: stepEnum("current_step").notNull().default("intent"),
 		status: statusEnum("status").notNull().default("draft"),
 		sentAt: timestamp("sent_at", { withTimezone: true }),
@@ -155,12 +179,15 @@ export const recipients = pgTable(
 		accessToken: text("access_token").notNull(),
 		email: text("email").notNull().default(""),
 		name: text("name").notNull().default(""),
+		passwordHash: text("password_hash"),
+		accountCreatedAt: timestamp("account_created_at", { withTimezone: true }),
 		firstSeenAt: timestamp("first_seen_at", { withTimezone: true }),
 		lastActiveAt: timestamp("last_active_at", { withTimezone: true }),
 	},
 	(t) => [
 		uniqueIndex("recipients_gift_id_uniq").on(t.giftId),
 		uniqueIndex("recipients_access_token_uniq").on(t.accessToken),
+		index("recipients_email_idx").on(t.email),
 	],
 );
 
@@ -190,3 +217,43 @@ export const responses = pgTable(
 		index("responses_question_id_idx").on(t.questionId),
 	],
 );
+
+export const journalEntries = pgTable(
+	"journal_entries",
+	{
+		id: text("id").primaryKey(),
+		recipientId: text("recipient_id")
+			.notNull()
+			.references(() => recipients.id, { onDelete: "cascade" }),
+		giftId: text("gift_id")
+			.notNull()
+			.references(() => gifts.id, { onDelete: "cascade" }),
+		source: entrySourceEnum("source").notNull(),
+		text: text("text"),
+		promptId: text("prompt_id"),
+		promptText: text("prompt_text"),
+		photoUrl: text("photo_url"),
+		audioUrl: text("audio_url"),
+		durationSeconds: integer("duration_seconds"),
+		preface: text("preface"),
+		createdAt: timestamp("created_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+	},
+	(t) => [
+		index("journal_entries_recipient_idx").on(t.recipientId, t.createdAt),
+		index("journal_entries_gift_idx").on(t.giftId),
+	],
+);
+
+export const sharing = pgTable("sharing", {
+	recipientId: text("recipient_id")
+		.primaryKey()
+		.references(() => recipients.id, { onDelete: "cascade" }),
+	mode: sharingModeEnum("mode").notNull().default("when-ready"),
+	date: date("date"),
+	milestonePreset: milestonePresetEnum("milestone_preset"),
+	milestoneText: text("milestone_text"),
+	sharedAt: timestamp("shared_at", { withTimezone: true }),
+	lastSharedSnapshotCount: integer("last_shared_snapshot_count"),
+});

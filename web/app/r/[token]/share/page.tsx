@@ -5,7 +5,7 @@ import { useState } from "react"
 import { AvatarMenu } from "../_components/AvatarMenu"
 import { BottomTabs } from "../_components/BottomTabs"
 import type { JournalEntry } from "../_lib/entries"
-import { isArchived, readSharing, sharingDisplay } from "../_lib/sharing"
+import { readSharing, sharingDisplay } from "../_lib/sharing"
 import { useParentState } from "../_lib/state"
 
 // Backend: from GET /r/:token. Hardcoded for now.
@@ -211,7 +211,7 @@ function ShareConfirmDialog({
 	)
 }
 
-function formatRelative(iso: string): string {
+function _formatRelative(iso: string): string {
 	try {
 		const then = new Date(iso).getTime()
 		const now = Date.now()

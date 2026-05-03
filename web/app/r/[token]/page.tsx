@@ -30,7 +30,7 @@ export default function ParentWelcomePage() {
 
 	useEffect(() => {
 		if (hydrated) markStep("welcome")
-	}, [hydrated])
+	}, [hydrated, markStep])
 
 	const handleContinue = () => {
 		update({ step: "letter" })

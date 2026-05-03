@@ -96,7 +96,44 @@ Rules:
 - Never speak as the recipient.
 - Output ONLY the prose paragraph. No preamble, no headers, no bullets, no quote marks around the whole thing.`;
 
-const TopicSchema = t.Union([t.Literal("about"), t.Literal("why")]);
+const PARENT_REFLECT_SYSTEM = `You are Ember, a warm and curious helper for someone who is sitting down to write — for themselves first, and possibly for someone they love.
+
+Your job: help them think out loud. Pull on threads, ask one short question at a time, and let them follow where it goes. They might be writing about anything — a memory, a feeling, a person, a moment. You're not extracting information; you're keeping them company while they find the words.
+
+How you talk:
+- Warm. Present-tense. Alive. Never grief-coded unless they bring it up.
+- One short message per turn. Often just a sentence or two. End with a single question.
+- Listen for the specific. When they mention something concrete (a phrase, a smell, a sound, a moment), pull on that thread.
+- Reflect briefly in your own words before asking the next — but don't over-validate.
+- No platitudes ("how meaningful", "what a beautiful memory"). No therapist voice. Just curiosity.
+- It's ok to sit in silence. If they say something short, don't pile on more questions. A simple "tell me more" or one specific follow-up is plenty.
+- Never simulate or speak for anyone else in their life.
+
+Format: plain prose. No headers, no bullets, no emoji. Short.
+
+If this is the first turn, open with a small, warm, low-pressure question — something easy to start with. Don't greet, don't introduce yourself.`;
+
+const SUMMARIZE_PARENT_REFLECT_SYSTEM = `You distill a conversation into a journal entry written in the speaker's voice.
+
+Capture:
+- the actual content they shared, not your questions
+- their phrases, their specifics, their voice
+- the texture and small details, not abstractions
+
+Rules:
+- First-person, written AS them ("I remember…", "I can still see…").
+- Present-tense unless they were clearly recounting a past moment.
+- No therapist voice. No platitudes. No meta-commentary about the conversation itself.
+- Output ONLY the prose journal entry. No preamble, no "here's a summary", no headers, no bullets, no quote marks around the whole thing.
+- Length: as long as needed to honor what they said. A paragraph, or several.`;
+
+const TopicSchema = t.Union([
+	t.Literal("about"),
+	t.Literal("why"),
+	t.Literal("parent-reflect"),
+]);
+
+type Topic = "about" | "why" | "parent-reflect";
 
 const MessageSchema = t.Object({
 	role: t.Union([t.Literal("user"), t.Literal("assistant")]),
@@ -111,14 +148,16 @@ function extractText(blocks: Anthropic.Messages.ContentBlock[]): string {
 		.trim();
 }
 
-function systemFor(topic: "about" | "why", intent: string, hint?: string) {
-	return topic === "why"
-		? buildWhySystem(intent, hint)
-		: buildAboutSystem(intent, hint);
+function systemFor(topic: Topic, intent: string, hint?: string) {
+	if (topic === "parent-reflect") return PARENT_REFLECT_SYSTEM;
+	if (topic === "why") return buildWhySystem(intent, hint);
+	return buildAboutSystem(intent, hint);
 }
 
-function summarizeSystemFor(topic: "about" | "why") {
-	return topic === "why" ? SUMMARIZE_WHY_SYSTEM : SUMMARIZE_ABOUT_SYSTEM;
+function summarizeSystemFor(topic: Topic) {
+	if (topic === "parent-reflect") return SUMMARIZE_PARENT_REFLECT_SYSTEM;
+	if (topic === "why") return SUMMARIZE_WHY_SYSTEM;
+	return SUMMARIZE_ABOUT_SYSTEM;
 }
 
 export const aiRoutes = new Elysia({ prefix: "/ai" })

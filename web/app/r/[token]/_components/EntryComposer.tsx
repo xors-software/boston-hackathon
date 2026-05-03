@@ -100,7 +100,7 @@ export function EntryComposer({
 				if (e.data.size > 0) chunksRef.current.push(e.data)
 			}
 			mr.onstop = async () => {
-				stream.getTracks().forEach((t) => t.stop())
+				for (const t of stream.getTracks()) t.stop()
 				const blob = new Blob(chunksRef.current, {
 					type: mr.mimeType || "audio/webm",
 				})
@@ -173,7 +173,6 @@ export function EntryComposer({
 					onChange={(e) => setText(e.target.value.slice(0, TEXT_MAX))}
 					placeholder={transcribing ? "Transcribing…" : "Start writing"}
 					rows={6}
-					autoFocus={autoFocus}
 					disabled={transcribing}
 					className="w-full resize-none rounded-2xl bg-transparent px-5 pt-5 pb-14 text-lg font-serif italic placeholder:italic outline-none disabled:opacity-60"
 					style={{ color: "var(--ember-ink)" }}
