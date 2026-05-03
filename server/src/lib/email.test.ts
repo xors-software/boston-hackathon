@@ -1,9 +1,10 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import {
 	buildSubject,
 	previewLine,
 	renderHtml,
 	renderText,
+	sendInvitation,
 } from "./email";
 
 const baseInput = {
@@ -55,5 +56,59 @@ describe("email body builders", () => {
 		);
 		expect(text).toContain("\nhttps://ember.app/r/abc123\n");
 		expect(text).toContain("Love,\nSam");
+	});
+});
+
+describe("sendInvitation", () => {
+	const realFetch = globalThis.fetch;
+
+	afterEach(() => {
+		globalThis.fetch = realFetch;
+		delete process.env.EMAIL_PROVIDER_API_KEY;
+	});
+
+	test("returns {sent:false, no-api-key} without calling fetch when key is unset", async () => {
+		delete process.env.EMAIL_PROVIDER_API_KEY;
+		let calls = 0;
+		globalThis.fetch = (async () => {
+			calls++;
+			return new Response("", { status: 200 });
+		}) as typeof fetch;
+
+		const outcome = await sendInvitation(baseInput);
+		expect(outcome).toEqual({ sent: false, reason: "no-api-key" });
+		expect(calls).toBe(0);
+	});
+
+	test("returns {sent:true} on a 200 from Resend", async () => {
+		process.env.EMAIL_PROVIDER_API_KEY = "re_test_key";
+		let captured: { url: string; auth: string | null } | null = null;
+		globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+			const url = typeof input === "string" ? input : input.toString();
+			captured = {
+				url,
+				auth:
+					init?.headers && (init.headers as Record<string, string>).Authorization
+						? (init.headers as Record<string, string>).Authorization
+						: null,
+			};
+			return new Response(JSON.stringify({ id: "msg_123" }), {
+				status: 200,
+				headers: { "content-type": "application/json" },
+			});
+		}) as typeof fetch;
+
+		const outcome = await sendInvitation(baseInput);
+		expect(outcome).toEqual({ sent: true });
+		expect(captured?.url).toContain("api.resend.com/emails");
+		expect(captured?.auth).toBe("Bearer re_test_key");
+	});
+
+	test("throws on non-2xx from Resend", async () => {
+		process.env.EMAIL_PROVIDER_API_KEY = "re_bad_key";
+		globalThis.fetch = (async () =>
+			new Response("invalid api key", { status: 401 })) as typeof fetch;
+
+		await expect(sendInvitation(baseInput)).rejects.toThrow(/Resend 401/);
 	});
 });
