@@ -53,8 +53,8 @@ export default function DeliveryPage() {
 	}
 
 	const goNext = () => {
-		update({ step: "send", data: { delivery: selected } })
-		router.push("/onboarding/send")
+		update({ step: "letter", data: { delivery: selected } })
+		router.push("/onboarding/letter")
 	}
 
 	return (

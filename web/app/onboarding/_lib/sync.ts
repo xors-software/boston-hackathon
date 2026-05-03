@@ -97,6 +97,8 @@ async function patchGiftFields(
 		patch.recipientName = data.recipientName
 	if (typeof data.recipientEmail === "string")
 		patch.recipientEmail = data.recipientEmail
+	if (typeof data.personalMessage === "string")
+		patch.personalMessage = data.personalMessage
 	if (state.step) patch.currentStep = state.step
 	if (Object.keys(patch).length === 0) return
 	await unwrap(api.gifts({ id: giftId }).patch(patch))

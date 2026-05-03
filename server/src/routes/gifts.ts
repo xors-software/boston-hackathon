@@ -70,6 +70,7 @@ const stepSchema = t.Union([
 	t.Literal("world"),
 	t.Literal("questions"),
 	t.Literal("delivery"),
+	t.Literal("letter"),
 	t.Literal("send"),
 	t.Literal("complete"),
 ]);

@@ -23,6 +23,7 @@ export type OnboardingStep =
 	| "world"
 	| "questions"
 	| "delivery"
+	| "letter"
 	| "send"
 	| "complete";
 

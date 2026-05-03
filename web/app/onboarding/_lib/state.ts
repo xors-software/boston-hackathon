@@ -14,6 +14,7 @@ export const ONBOARDING_STEPS = [
 	"world",
 	"questions",
 	"delivery",
+	"letter",
 	"send",
 	"complete",
 ] as const
