@@ -102,6 +102,10 @@ async function seed() {
 }
 
 beforeAll(() => {
+	// Skip when not running integration — `process.env` is process-global,
+	// so leaving TEST_USER_EMAIL set here would short-circuit
+	// authContext.maybeTestUser() in every other test file's request.
+	if (!SHOULD_RUN) return;
 	process.env.TEST_USER_EMAIL = TEST_EMAIL;
 	process.env.OPENAI_API_KEY = "sk-test-stub";
 });
