@@ -195,7 +195,6 @@ export default function WriteQuestionPage() {
 								onChange={(e) => setText(e.target.value.slice(0, QUESTION_MAX))}
 								placeholder="What were you thinking about on the drive home from the hospital?"
 								rows={4}
-								autoFocus
 								className="block w-full resize-none rounded-2xl bg-transparent px-4 pt-3 pb-7 text-base text-[color:var(--ember-ink)] placeholder:text-[color:var(--ember-soft-gray)] outline-none"
 							/>
 							<div className="pointer-events-none absolute left-4 bottom-2 text-xs text-[color:var(--ember-soft-gray)]">
@@ -219,7 +218,7 @@ export default function WriteQuestionPage() {
 							<div className="relative rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-cream-light)] overflow-hidden">
 								<img
 									src={photoPreview}
-									alt="Question photo preview"
+									alt="Preview of the attachment"
 									className="block w-full max-h-64 object-cover"
 								/>
 								<div className="flex items-center justify-end gap-3 px-4 py-2 bg-[color:var(--ember-card)] border-t border-[color:var(--ember-divider)]">

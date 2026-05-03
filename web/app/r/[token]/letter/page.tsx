@@ -27,7 +27,7 @@ export default function ParentLetterPage() {
 
 	useEffect(() => {
 		if (hydrated) markStep("letter")
-	}, [hydrated])
+	}, [hydrated, markStep])
 
 	const message = MOCK.personalMessage?.trim() || GENERIC_LETTER
 	const paragraphs = message

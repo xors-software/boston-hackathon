@@ -44,7 +44,7 @@ export default function ParentHomePage() {
 
 	useEffect(() => {
 		if (hydrated) markStep("home")
-	}, [hydrated])
+	}, [hydrated, markStep])
 
 	const todayPhrase = timeOfDayPhrase(new Date())
 	const entries = (state.data.entries as JournalEntry[] | undefined) ?? []
@@ -125,15 +125,14 @@ export default function ParentHomePage() {
 					<>
 						<div className="mt-8">
 							<EntryComposer key={composerKey} onSave={handleSave} />
-							<p
-								className="mt-3 text-center font-serif italic text-sm"
+							<output
+								className="mt-3 block text-center font-serif italic text-sm"
 								style={{ color: "var(--ember-warm-gray)" }}
-								role="status"
 							>
 								{savedToast
 									? "Saved to your journal."
 									: "your words, auto-saved as you go"}
-							</p>
+							</output>
 						</div>
 
 						<div className="mt-10">

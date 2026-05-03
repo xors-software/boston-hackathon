@@ -11,12 +11,20 @@
 // per run (which will create one new account in the xors users
 // table — that's the cost of opt-in network testing).
 
-import { describe, expect, it } from "bun:test";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { Elysia } from "elysia";
 import { authRoutes } from "./auth";
 
 const SHOULD_RUN = process.env.INTEGRATION === "1";
 const dscribe = SHOULD_RUN ? describe : describe.skip;
+
+// Other integration tests (recipient.*, recipient-flow.*) set
+// TEST_USER_EMAIL in their beforeAll to bypass XORS session lookup.
+// That env var is process-global and leaks across files in the same
+// `bun test` run — left set, the auth context here would short-circuit
+// to the fake test user instead of decoding the real session cookie
+// from /auth/login. Stash + clear for the duration of this file.
+let savedTestUserEmail: string | undefined;
 
 const TEST_EMAIL =
 	process.env.INTEGRATION_TEST_EMAIL ||
@@ -33,6 +41,19 @@ function extractSessionCookie(setCookie: string | null): string | null {
 	const match = setCookie.match(/xors_session=([^;]+)/);
 	return match?.[1] ?? null;
 }
+
+beforeAll(() => {
+	if (!SHOULD_RUN) return;
+	savedTestUserEmail = process.env.TEST_USER_EMAIL;
+	delete process.env.TEST_USER_EMAIL;
+});
+
+afterAll(() => {
+	if (!SHOULD_RUN) return;
+	if (savedTestUserEmail !== undefined) {
+		process.env.TEST_USER_EMAIL = savedTestUserEmail;
+	}
+});
 
 dscribe("integration: real api.xors.xyz round-trip", () => {
 	it(
@@ -75,7 +96,10 @@ dscribe("integration: real api.xors.xyz round-trip", () => {
 				user: { id: string; email: string; displayName: string | null };
 			};
 			expect(me.user.email).toBe(TEST_EMAIL.toLowerCase());
-			expect(me.user.id).toMatch(/^usr_/);
+			// xors id is opaque — was prefixed `usr_` historically, today
+			// it's a bare UUID. Just assert it's a non-empty string.
+			expect(typeof me.user.id).toBe("string");
+			expect(me.user.id.length).toBeGreaterThan(0);
 
 			// Re-login with same creds (existing-user path).
 			const loginAgain = await app.handle(

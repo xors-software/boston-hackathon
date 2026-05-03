@@ -208,7 +208,6 @@ export default function SendPage() {
 										type="text"
 										value={draftName}
 										onChange={(e) => setDraftName(e.target.value)}
-										autoFocus
 										className="rounded-xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] px-3 py-2.5 text-base text-[color:var(--ember-ink)] outline-none focus:border-neutral-900 transition-colors"
 									/>
 								</label>

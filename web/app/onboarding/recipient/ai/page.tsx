@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { type FormEvent, useEffect, useRef, useState } from "react"
+import { type FormEvent, useCallback, useEffect, useRef, useState } from "react"
 import { useOnboardingState } from "../../_lib/state"
 
 const TARGET_QUESTIONS = 6
@@ -45,46 +45,49 @@ export default function AiAboutPage() {
 		(m) => m.role === "user",
 	).length
 
+	const converse = useCallback(
+		async (history: ChatMessage[]) => {
+			setSending(true)
+			setError(null)
+			try {
+				const res = await fetch(`/api/ai/converse`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						topic: "about",
+						messages: history,
+						intent,
+						hint: priorAbout,
+					}),
+				})
+				const data = (await res.json()) as { message?: string; error?: string }
+				if (!res.ok || !data.message) {
+					setError(data.error || "Couldn't reach Ember.")
+					return
+				}
+				setMessages([...history, { role: "assistant", content: data.message }])
+			} catch (err) {
+				console.error(err)
+				setError("Couldn't reach Ember.")
+			} finally {
+				setSending(false)
+			}
+		},
+		[intent, priorAbout],
+	)
+
 	// Open with the first AI message
 	useEffect(() => {
 		if (!hydrated || initRef.current) return
 		initRef.current = true
 		void converse([])
-	}, [hydrated])
+	}, [hydrated, converse])
 
 	useEffect(() => {
 		const el = scrollRef.current
 		if (!el) return
 		el.scrollTo({ top: el.scrollHeight, behavior: "smooth" })
-	}, [messages, sending])
-
-	async function converse(history: ChatMessage[]) {
-		setSending(true)
-		setError(null)
-		try {
-			const res = await fetch(`/api/ai/converse`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					topic: "about",
-					messages: history,
-					intent,
-					hint: priorAbout,
-				}),
-			})
-			const data = (await res.json()) as { message?: string; error?: string }
-			if (!res.ok || !data.message) {
-				setError(data.error || "Couldn't reach Ember.")
-				return
-			}
-			setMessages([...history, { role: "assistant", content: data.message }])
-		} catch (err) {
-			console.error(err)
-			setError("Couldn't reach Ember.")
-		} finally {
-			setSending(false)
-		}
-	}
+	}, [])
 
 	const onSubmit = async (e: FormEvent) => {
 		e.preventDefault()
@@ -136,7 +139,7 @@ export default function AiAboutPage() {
 				if (e.data.size > 0) chunksRef.current.push(e.data)
 			}
 			mr.onstop = async () => {
-				stream.getTracks().forEach((t) => t.stop())
+				for (const t of stream.getTracks()) t.stop()
 				const blob = new Blob(chunksRef.current, {
 					type: mr.mimeType || "audio/webm",
 				})

@@ -59,7 +59,7 @@ export default function VoicePage() {
 				if (e.data.size > 0) chunksRef.current.push(e.data)
 			}
 			mr.onstop = async () => {
-				stream.getTracks().forEach((t) => t.stop())
+				for (const t of stream.getTracks()) t.stop()
 				if (timerRef.current) {
 					window.clearInterval(timerRef.current)
 					timerRef.current = null
