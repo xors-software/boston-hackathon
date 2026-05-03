@@ -1,4 +1,5 @@
 import { Elysia, t } from "elysia";
+import { recipientLogin } from "../lib/gift-store";
 import { authContext, XORS_SESSION_COOKIE } from "../lib/xors-identity";
 
 const COOKIE_SECURE =
@@ -130,5 +131,42 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 		{
 			response: t.Object({ ok: t.Literal(true) }),
 			detail: { summary: "Clear session cookie", tags: ["Auth"] },
+		},
+	)
+	// Parent (recipient) login. Distinct from the giver path above —
+	// no XORS round-trip; we look up the recipient by email and verify
+	// their stored password hash. Returns the access token so the
+	// caller can navigate to /r/:token directly.
+	.post(
+		"/recipient/login",
+		async ({ body, set }) => {
+			const recipient = await recipientLogin(body.email, body.password);
+			if (!recipient) {
+				set.status = 401;
+				return { error: "Wrong email or password." };
+			}
+			return {
+				ok: true as const,
+				token: recipient.accessToken,
+				redirectTo: `/r/${recipient.accessToken}/journal`,
+			};
+		},
+		{
+			body: t.Object({
+				email: t.String({ minLength: 3, maxLength: 320 }),
+				password: t.String({ minLength: 1, maxLength: 256 }),
+			}),
+			response: {
+				200: t.Object({
+					ok: t.Literal(true),
+					token: t.String(),
+					redirectTo: t.String(),
+				}),
+				401: t.Object({ error: t.String() }),
+			},
+			detail: {
+				summary: "Sign in as a recipient (parent flow) by email + password",
+				tags: ["Auth"],
+			},
 		},
 	);
