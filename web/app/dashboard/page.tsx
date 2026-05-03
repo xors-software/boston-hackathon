@@ -62,13 +62,13 @@ export default function DashboardPage() {
 	if (!hydrated || !sentAt) return null
 
 	return (
-		<main className="min-h-dvh bg-white">
+		<main className="min-h-dvh bg-[color:var(--ember-card)]">
 			<div className="mx-auto w-full max-w-md px-6 pt-10 pb-12 sm:px-8">
 				<header className="mb-8">
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-neutral-900 mb-2">
+					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)] mb-2">
 						For {recipientName}.
 					</h1>
-					<p className="text-sm text-neutral-500">
+					<p className="text-sm text-[color:var(--ember-warm-gray)]">
 						Sent {formatDate(sentAt)} · {deliveryLabel}
 					</p>
 				</header>
@@ -85,23 +85,23 @@ export default function DashboardPage() {
 					<button
 						type="button"
 						onClick={() => router.push("/onboarding/questions/write")}
-						className="w-full rounded-2xl border border-neutral-200 bg-white px-5 py-4 text-base font-medium text-neutral-900 transition-colors hover:bg-neutral-50 active:bg-neutral-100"
+						className="w-full rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-card)] px-5 py-4 text-base font-medium text-[color:var(--ember-ink)] transition-colors hover:bg-[color:var(--ember-cream-light)] active:bg-neutral-100"
 					>
 						+ Add a question
 					</button>
 				</div>
 
-				<div className="mt-8 text-center text-sm text-neutral-500">
+				<div className="mt-8 text-center text-sm text-[color:var(--ember-warm-gray)]">
 					<a
 						href="#settings"
-						className="underline underline-offset-2 hover:text-neutral-700 transition-colors"
+						className="underline underline-offset-2 hover:text-[color:var(--ember-warm-gray)] transition-colors"
 					>
 						Settings
 					</a>
 					<span className="mx-2" aria-hidden="true">·</span>
 					<a
 						href="#help"
-						className="underline underline-offset-2 hover:text-neutral-700 transition-colors"
+						className="underline underline-offset-2 hover:text-[color:var(--ember-warm-gray)] transition-colors"
 					>
 						Help
 					</a>
@@ -121,13 +121,13 @@ function DashCard({
 	hint?: string
 }) {
 	return (
-		<div className="rounded-2xl border border-neutral-200 bg-white px-5 py-4">
-			<div className="text-[10px] font-medium uppercase tracking-[0.12em] text-neutral-400 mb-1">
+		<div className="rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-card)] px-5 py-4">
+			<div className="text-[10px] font-medium uppercase tracking-[0.12em] text-[color:var(--ember-soft-gray)] mb-1">
 				{label}
 			</div>
-			<div className="text-base text-neutral-900">
+			<div className="text-base text-[color:var(--ember-ink)]">
 				<span className="font-semibold">{value}</span>
-				{hint && <span className="text-neutral-500"> · {hint}</span>}
+				{hint && <span className="text-[color:var(--ember-warm-gray)]"> · {hint}</span>}
 			</div>
 		</div>
 	)

@@ -34,12 +34,12 @@ export default function SentPage() {
 	}
 
 	return (
-		<main className="min-h-dvh bg-white flex flex-col">
+		<main className="min-h-dvh bg-[color:var(--ember-card)] flex flex-col">
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-12 sm:px-8 flex-1 flex flex-col">
 				<button
 					type="button"
 					onClick={() => router.back()}
-					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-neutral-700 transition-colors hover:text-neutral-900"
+					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:text-[color:var(--ember-ink)]"
 				>
 					<svg
 						aria-hidden="true"
@@ -57,16 +57,16 @@ export default function SentPage() {
 				</button>
 
 				<div className="flex-1 flex flex-col items-center justify-center text-center px-2">
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-neutral-900 mb-4">
+					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)] mb-4">
 						It's on its way.
 					</h1>
-					<p className="text-base text-neutral-500 leading-relaxed mb-10">
+					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed mb-10">
 						You'll hear back when {subject} opens it.
 					</p>
 
 					{recipientLink && (
-						<div className="w-full mb-10 rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-4 text-left">
-							<div className="text-xs uppercase tracking-wider text-neutral-500 mb-2">
+						<div className="w-full mb-10 rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-cream-light)] px-4 py-4 text-left">
+							<div className="text-xs uppercase tracking-wider text-[color:var(--ember-warm-gray)] mb-2">
 								Recipient link (also delivered by email — backup copy)
 							</div>
 							<div className="break-all text-sm text-neutral-800 font-mono">
@@ -75,7 +75,7 @@ export default function SentPage() {
 							<button
 								type="button"
 								onClick={copyLink}
-								className="mt-3 text-sm text-neutral-700 underline underline-offset-2 hover:text-neutral-900 transition-colors"
+								className="mt-3 text-sm text-[color:var(--ember-warm-gray)] underline underline-offset-2 hover:text-[color:var(--ember-ink)] transition-colors"
 							>
 								{copied ? "Copied" : "Copy link"}
 							</button>
@@ -85,7 +85,7 @@ export default function SentPage() {
 					<button
 						type="button"
 						onClick={() => router.push("/dashboard")}
-						className="inline-flex items-center gap-1 text-base text-neutral-900 underline underline-offset-2 hover:text-neutral-700 transition-colors"
+						className="inline-flex items-center gap-1 text-base text-[color:var(--ember-ink)] underline underline-offset-2 hover:text-[color:var(--ember-warm-gray)] transition-colors"
 					>
 						Go to dashboard <span aria-hidden="true">→</span>
 					</button>

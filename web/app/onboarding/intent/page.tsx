@@ -28,13 +28,20 @@ export default function IntentPage() {
 	}
 
 	return (
-		<main className="min-h-dvh bg-white">
+		<main className="min-h-dvh bg-[color:var(--ember-card)]">
 			<div className="mx-auto w-full max-w-md px-6 pt-14 pb-12 sm:px-8">
 				<header className="mb-8">
-					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight text-neutral-900 leading-tight mb-3">
-						Who are you here for?
+					<h1 className="font-serif text-[40px] sm:text-[44px] tracking-tight text-[color:var(--ember-ink)] leading-[1.05] mb-3">
+						Who are you here{" "}
+						<span
+							className="italic"
+							style={{ color: "var(--ember-terracotta)" }}
+						>
+							for
+						</span>
+						?
 					</h1>
-					<p className="text-base text-neutral-500 leading-relaxed">
+					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						Ember is a slow gift. Start by telling us who you're thinking of.
 					</p>
 				</header>
@@ -45,13 +52,13 @@ export default function IntentPage() {
 							key={opt.id}
 							type="button"
 							onClick={() => select(opt.id)}
-							className="group w-full flex items-center justify-between gap-4 rounded-2xl border border-neutral-200 bg-white px-5 py-4 text-left transition-colors hover:border-neutral-300 hover:bg-neutral-50 active:bg-neutral-100"
+							className="group w-full flex items-center justify-between gap-4 rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-card)] px-5 py-4 text-left transition-colors hover:border-[color:var(--ember-divider)] hover:bg-[color:var(--ember-cream-light)] active:bg-neutral-100"
 						>
 							<div className="min-w-0">
-								<div className="text-base font-semibold text-neutral-900">
+								<div className="text-base font-semibold text-[color:var(--ember-ink)]">
 									{opt.title}
 								</div>
-								<div className="mt-0.5 text-sm text-neutral-500">
+								<div className="mt-0.5 text-sm text-[color:var(--ember-warm-gray)]">
 									{opt.subtitle}
 								</div>
 							</div>
@@ -63,7 +70,7 @@ export default function IntentPage() {
 								strokeWidth="2"
 								strokeLinecap="round"
 								strokeLinejoin="round"
-								className="h-5 w-5 shrink-0 text-neutral-400 transition-colors group-hover:text-neutral-600"
+								className="h-5 w-5 shrink-0 text-[color:var(--ember-soft-gray)] transition-colors group-hover:text-[color:var(--ember-warm-gray)]"
 							>
 								<polyline points="9 6 15 12 9 18" />
 							</svg>

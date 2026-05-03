@@ -1,36 +1,23 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { type FormEvent, useEffect, useRef, useState } from "react"
-import { useOnboardingState } from "../../_lib/state"
-
-const TARGET_QUESTIONS = 5
-const WHY_MAX = 2000
-
-const RELATIONSHIP_LABELS: Record<
-	string,
-	{ subject: string; possessive: string }
-> = {
-	mom: { subject: "her", possessive: "her" },
-	dad: { subject: "him", possessive: "his" },
-	"loved-one": { subject: "them", possessive: "their" },
-	undecided: { subject: "them", possessive: "their" },
-}
+import { type JournalEntry, newEntryId } from "../_lib/entries"
+import { isArchived } from "../_lib/sharing"
+import { useParentState } from "../_lib/state"
 
 type ChatMessage = { role: "user" | "assistant"; content: string }
 
-export default function WhyAiPage() {
+export default function ParentAiChatPage() {
 	const router = useRouter()
-	const { state, update, hydrated } = useOnboardingState()
-
-	const intent = (state.data.intent as string | undefined) ?? "loved-one"
-	const priorWhy = state.data.why as string | undefined
-	const labels = RELATIONSHIP_LABELS[intent] ?? RELATIONSHIP_LABELS["loved-one"]
+	const params = useParams()
+	const token = (params.token as string) ?? ""
+	const { state, update, hydrated } = useParentState(token)
 
 	const [messages, setMessages] = useState<ChatMessage[]>([])
 	const [input, setInput] = useState("")
 	const [sending, setSending] = useState(false)
-	const [ending, setEnding] = useState(false)
+	const [saving, setSaving] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 
 	const [recording, setRecording] = useState(false)
@@ -41,10 +28,10 @@ export default function WhyAiPage() {
 	const scrollRef = useRef<HTMLDivElement>(null)
 	const initRef = useRef(false)
 
-	const userQuestionsAnswered = messages.filter(
-		(m) => m.role === "user",
-	).length
+	const userTurns = messages.filter((m) => m.role === "user").length
+	const archived = hydrated && isArchived(state.data)
 
+	// Open with the first AI message
 	useEffect(() => {
 		if (!hydrated || initRef.current) return
 		initRef.current = true
@@ -65,10 +52,9 @@ export default function WhyAiPage() {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
-					topic: "why",
+					topic: "parent-reflect",
 					messages: history,
-					intent,
-					hint: priorWhy,
+					intent: "n/a",
 				}),
 			})
 			const data = (await res.json()) as { message?: string; error?: string }
@@ -94,34 +80,44 @@ export default function WhyAiPage() {
 		await converse(next)
 	}
 
-	const endConversation = async () => {
-		setEnding(true)
+	const saveAsEntry = async () => {
+		if (userTurns === 0) return
+		setSaving(true)
 		setError(null)
 		try {
 			const res = await fetch(`/api/ai/summarize`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ topic: "why", messages }),
+				body: JSON.stringify({ topic: "parent-reflect", messages }),
 			})
 			const data = (await res.json()) as { summary?: string; error?: string }
 			if (!res.ok) {
 				setError(data.error || "Couldn't save the conversation.")
-				setEnding(false)
 				return
 			}
 			const summary = (data.summary || "").trim()
-			const merged = [priorWhy?.trim(), summary]
-				.filter((s): s is string => Boolean(s))
-				.join(" ")
-				.slice(0, WHY_MAX)
-			update({ step: "world", data: { why: merged } })
-			router.push("/onboarding/world")
+			if (!summary) {
+				setError("Nothing to save yet — chat a bit more first.")
+				return
+			}
+			const entries =
+				(state.data.entries as JournalEntry[] | undefined) ?? []
+			const entry: JournalEntry = {
+				id: newEntryId(),
+				createdAt: new Date().toISOString(),
+				source: "ai",
+				text: summary,
+			}
+			update({ data: { entries: [entry, ...entries] } })
+			router.push(`/r/${token}/journal`)
 		} catch {
 			setError("Couldn't save the conversation.")
-			setEnding(false)
+		} finally {
+			setSaving(false)
 		}
 	}
 
+	// ─── voice ───
 	const startRecording = async () => {
 		setError(null)
 		if (typeof MediaRecorder === "undefined") return
@@ -187,36 +183,54 @@ export default function WhyAiPage() {
 	}
 
 	return (
-		<main className="min-h-dvh bg-[color:var(--ember-card)] flex flex-col">
+		<main
+			className="min-h-dvh w-full flex flex-col"
+			style={{ backgroundColor: "var(--ember-cream)" }}
+		>
 			<div className="mx-auto w-full max-w-md flex-1 flex flex-col px-6 pt-6 pb-6 sm:px-8">
-				<button
-					type="button"
-					onClick={() => router.back()}
-					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:text-[color:var(--ember-ink)]"
-				>
-					<svg
-						aria-hidden="true"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="2"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						className="h-4 w-4"
+				<div className="flex items-center justify-between">
+					<button
+						type="button"
+						onClick={() => router.back()}
+						className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:text-[color:var(--ember-ink)]"
 					>
-						<polyline points="15 6 9 12 15 18" />
-					</svg>
-					Back
-				</button>
+						<svg
+							aria-hidden="true"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							className="h-4 w-4"
+						>
+							<polyline points="15 6 9 12 15 18" />
+						</svg>
+						Back
+					</button>
+					<button
+						type="button"
+						onClick={saveAsEntry}
+						disabled={userTurns === 0 || saving || sending || archived}
+						className="text-sm font-medium text-[color:var(--ember-ink)] underline underline-offset-2 transition-colors hover:text-[color:var(--ember-warm-gray)] disabled:text-[color:var(--ember-soft-gray)] disabled:no-underline disabled:cursor-not-allowed"
+					>
+						{saving ? "Saving…" : "Save as entry →"}
+					</button>
+				</div>
 
 				<header className="mt-4 mb-5">
-					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)]">
-						Why this gift, why now?
+					<p
+						className="text-[11px] font-medium tracking-[0.22em] uppercase mb-2"
+						style={{ color: "var(--ember-terracotta)" }}
+					>
+						Talk it through
+					</p>
+					<h1 className="text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)] mb-2">
+						Tell me what's on your mind.
 					</h1>
-					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
-						I'll help you find the words. Nothing here is shared with{" "}
-						{labels.subject} — it shapes the questions and the letter{" "}
-						{labels.subject}'ll receive.
+					<p className="text-sm text-[color:var(--ember-warm-gray)] leading-relaxed">
+						I'll keep you company. When you're ready, save what you said as a
+						journal entry.
 					</p>
 				</header>
 
@@ -228,10 +242,10 @@ export default function WhyAiPage() {
 						m.role === "assistant" ? (
 							<div
 								key={i}
-								className="self-start max-w-[85%] rounded-2xl bg-neutral-100 px-4 py-3"
+								className="self-start max-w-[85%] rounded-2xl bg-[color:var(--ember-card)] px-4 py-3"
 							>
 								<div className="text-[10px] font-medium uppercase tracking-[0.12em] text-[color:var(--ember-soft-gray)] mb-1">
-									EMBER
+									Ember
 								</div>
 								<div className="text-base text-[color:var(--ember-ink)] leading-relaxed whitespace-pre-wrap">
 									{m.content}
@@ -240,7 +254,7 @@ export default function WhyAiPage() {
 						) : (
 							<div
 								key={i}
-								className="self-end max-w-[85%] rounded-2xl bg-[color:var(--ember-ink)] px-4 py-3"
+								className="self-end max-w-[85%] rounded-2xl bg-neutral-900 px-4 py-3"
 							>
 								<div className="text-base text-white leading-relaxed whitespace-pre-wrap">
 									{m.content}
@@ -259,20 +273,22 @@ export default function WhyAiPage() {
 
 				<form
 					onSubmit={onSubmit}
-					className="relative mt-4 rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] focus-within:border-neutral-900 transition-colors"
+					className="relative mt-4 rounded-2xl border border-[color:var(--ember-divider)]/60 bg-[color:var(--ember-input)] focus-within:border-neutral-900 transition-colors"
 				>
 					<input
 						type="text"
 						value={input}
 						onChange={(e) => setInput(e.target.value)}
-						placeholder={transcribing ? "Transcribing…" : "Type your reply..."}
-						disabled={transcribing || ending}
+						placeholder={
+							transcribing ? "Transcribing…" : "Type your reply..."
+						}
+						disabled={transcribing || saving}
 						className="block w-full rounded-2xl bg-transparent pl-4 pr-12 py-3.5 text-base text-[color:var(--ember-ink)] placeholder:text-[color:var(--ember-soft-gray)] outline-none disabled:opacity-60"
 					/>
 					<button
 						type="button"
 						onClick={toggleRecord}
-						disabled={transcribing || sending || ending}
+						disabled={transcribing || sending || saving}
 						aria-label={recording ? "Stop recording" : "Record voice reply"}
 						className={`absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full border transition-colors ${
 							recording
@@ -311,23 +327,17 @@ export default function WhyAiPage() {
 					</button>
 				</form>
 
-				<div className="mt-3 flex items-center justify-between text-sm">
-					<span className="text-[color:var(--ember-warm-gray)]">
-						{userQuestionsAnswered} of ~{TARGET_QUESTIONS} questions
-					</span>
-					<button
-						type="button"
-						onClick={endConversation}
-						disabled={ending || messages.length === 0}
-						className="inline-flex items-center gap-1 text-[color:var(--ember-ink)] underline underline-offset-2 transition-colors hover:text-[color:var(--ember-warm-gray)] disabled:opacity-50 disabled:no-underline"
-					>
-						{ending ? "Saving…" : "End conversation"}
-						{!ending && <span aria-hidden="true">→</span>}
-					</button>
-				</div>
+				<button
+					type="button"
+					onClick={saveAsEntry}
+					disabled={userTurns === 0 || saving || sending || archived}
+					className="mt-3 ember-cta disabled:opacity-50 disabled:cursor-not-allowed"
+				>
+					{saving ? "Saving…" : "Save this as a journal entry"}
+				</button>
 
-				<p className="mt-3 text-center text-sm text-[color:var(--ember-soft-gray)]">
-					Private to you. Never shared with {labels.subject}.
+				<p className="mt-3 text-center text-xs text-[color:var(--ember-warm-gray)]">
+					Private to you. Nothing leaves until you say so.
 				</p>
 			</div>
 		</main>

@@ -75,13 +75,13 @@ export default function WorldPage() {
 	}
 
 	return (
-		<main className="min-h-dvh bg-white">
+		<main className="min-h-dvh bg-[color:var(--ember-card)]">
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-12 sm:px-8">
 				<div className="flex items-center justify-between">
 					<button
 						type="button"
 						onClick={() => router.back()}
-						className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-neutral-700 transition-colors hover:text-neutral-900"
+						className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:text-[color:var(--ember-ink)]"
 					>
 						<svg
 							aria-hidden="true"
@@ -100,17 +100,17 @@ export default function WorldPage() {
 					<button
 						type="button"
 						onClick={goSkip}
-						className="py-2 text-base text-neutral-500 transition-colors hover:text-neutral-700"
+						className="py-2 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:text-[color:var(--ember-warm-gray)]"
 					>
 						Skip
 					</button>
 				</div>
 
 				<header className="mt-6 mb-6">
-					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-neutral-900">
+					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)]">
 						Who's in {labels.possessive} world?
 					</h1>
-					<p className="text-base text-neutral-500 leading-relaxed">
+					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						The people who matter to {labels.subject}. A line about each lets us
 						ask better questions — "Tell me about the day David proposed," not
 						"Tell me about your husband."
@@ -118,11 +118,11 @@ export default function WorldPage() {
 				</header>
 
 				{people.length === 0 && !editing && (
-					<div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 px-5 py-4 mb-3">
-						<div className="text-base font-semibold text-neutral-900 mb-1">
+					<div className="rounded-2xl border border-dashed border-[color:var(--ember-divider)] bg-[color:var(--ember-cream-light)] px-5 py-4 mb-3">
+						<div className="text-base font-semibold text-[color:var(--ember-ink)] mb-1">
 							How this works
 						</div>
-						<p className="text-sm text-neutral-600 leading-relaxed">
+						<p className="text-sm text-[color:var(--ember-warm-gray)] leading-relaxed">
 							Add a person, then a sentence or two — their relationship to{" "}
 							{labels.subject}, what they're like, anything that might come up
 							in {labels.possessive} stories. Mic icon for voice.
@@ -163,14 +163,14 @@ export default function WorldPage() {
 						<button
 							type="button"
 							onClick={startAdd}
-							className="w-full rounded-2xl border border-dashed border-neutral-300 bg-white px-5 py-4 text-base text-neutral-600 transition-colors hover:border-neutral-400 hover:bg-neutral-50"
+							className="w-full rounded-2xl border border-dashed border-[color:var(--ember-divider)] bg-[color:var(--ember-card)] px-5 py-4 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:border-neutral-400 hover:bg-[color:var(--ember-cream-light)]"
 						>
 							+ Add person
 						</button>
 					)}
 				</div>
 
-				<p className="mt-4 flex items-start gap-1.5 text-sm text-neutral-500">
+				<p className="mt-4 flex items-start gap-1.5 text-sm text-[color:var(--ember-warm-gray)]">
 					<svg
 						aria-hidden="true"
 						viewBox="0 0 24 24"
@@ -193,7 +193,7 @@ export default function WorldPage() {
 					<button
 						type="button"
 						onClick={goNext}
-						className="w-full rounded-2xl bg-neutral-900 py-4 text-base font-medium text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700"
+						className="ember-cta"
 					>
 						Continue
 					</button>
@@ -203,7 +203,7 @@ export default function WorldPage() {
 					<button
 						type="button"
 						onClick={goSkip}
-						className="text-sm text-neutral-500 underline underline-offset-2 transition-colors hover:text-neutral-700"
+						className="text-sm text-[color:var(--ember-warm-gray)] underline underline-offset-2 transition-colors hover:text-[color:var(--ember-warm-gray)]"
 					>
 						Skip for now
 					</button>
@@ -227,26 +227,26 @@ function PersonCard({
 		.join(" · ")
 
 	return (
-		<div className="rounded-2xl border border-neutral-200 bg-white px-5 py-4">
+		<div className="rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-card)] px-5 py-4">
 			<div className="flex items-start justify-between gap-3">
 				<div className="min-w-0 flex-1">
-					<div className="text-base text-neutral-900">
+					<div className="text-base text-[color:var(--ember-ink)]">
 						<span className="font-semibold">{person.name}</span>
 						{meta && (
-							<span className="text-neutral-500"> — {meta}</span>
+							<span className="text-[color:var(--ember-warm-gray)]"> — {meta}</span>
 						)}
 					</div>
 					{person.description && (
-						<p className="mt-1 text-sm text-neutral-600 leading-relaxed">
+						<p className="mt-1 text-sm text-[color:var(--ember-warm-gray)] leading-relaxed">
 							{person.description}
 						</p>
 					)}
 				</div>
-				<div className="flex items-center gap-2 text-sm text-neutral-400 shrink-0">
+				<div className="flex items-center gap-2 text-sm text-[color:var(--ember-soft-gray)] shrink-0">
 					<button
 						type="button"
 						onClick={onEdit}
-						className="hover:text-neutral-700 transition-colors"
+						className="hover:text-[color:var(--ember-warm-gray)] transition-colors"
 					>
 						edit
 					</button>
@@ -255,7 +255,7 @@ function PersonCard({
 						type="button"
 						onClick={onRemove}
 						aria-label="Remove person"
-						className="hover:text-neutral-700 transition-colors"
+						className="hover:text-[color:var(--ember-warm-gray)] transition-colors"
 					>
 						×
 					</button>
@@ -373,7 +373,7 @@ function PersonForm({
 	return (
 		<form
 			onSubmit={handleSubmit}
-			className="rounded-2xl border border-neutral-300 bg-white px-5 py-4"
+			className="rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-card)] px-5 py-4"
 		>
 			<div className="flex flex-col gap-3">
 				<div className="grid grid-cols-[1fr_auto] gap-3">
@@ -383,7 +383,7 @@ function PersonForm({
 						value={person.name}
 						onChange={(e) => onChange({ ...person, name: e.target.value })}
 						autoFocus
-						className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-base text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-neutral-900 transition-colors"
+						className="w-full rounded-xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] px-3 py-2.5 text-base text-[color:var(--ember-ink)] placeholder:text-[color:var(--ember-soft-gray)] outline-none focus:border-neutral-900 transition-colors"
 					/>
 					<input
 						type="text"
@@ -391,7 +391,7 @@ function PersonForm({
 						placeholder="Age"
 						value={person.age}
 						onChange={(e) => onChange({ ...person, age: e.target.value })}
-						className="w-20 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-base text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-neutral-900 transition-colors"
+						className="w-20 rounded-xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] px-3 py-2.5 text-base text-[color:var(--ember-ink)] placeholder:text-[color:var(--ember-soft-gray)] outline-none focus:border-neutral-900 transition-colors"
 					/>
 				</div>
 
@@ -402,10 +402,10 @@ function PersonForm({
 					onChange={(e) =>
 						onChange({ ...person, relationship: e.target.value })
 					}
-					className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-base text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-neutral-900 transition-colors"
+					className="w-full rounded-xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] px-3 py-2.5 text-base text-[color:var(--ember-ink)] placeholder:text-[color:var(--ember-soft-gray)] outline-none focus:border-neutral-900 transition-colors"
 				/>
 
-				<div className="relative rounded-xl border border-neutral-200 bg-white focus-within:border-neutral-900 transition-colors">
+				<div className="relative rounded-xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] focus-within:border-neutral-900 transition-colors">
 					<textarea
 						placeholder="A line or two about them"
 						value={person.description}
@@ -417,9 +417,9 @@ function PersonForm({
 						}
 						rows={3}
 						disabled={transcribing}
-						className="block w-full resize-none rounded-xl bg-transparent px-3 pt-2.5 pb-9 text-base text-neutral-900 placeholder:text-neutral-400 outline-none disabled:opacity-60"
+						className="block w-full resize-none rounded-xl bg-transparent px-3 pt-2.5 pb-9 text-base text-[color:var(--ember-ink)] placeholder:text-[color:var(--ember-soft-gray)] outline-none disabled:opacity-60"
 					/>
-					<div className="pointer-events-none absolute left-3 bottom-2.5 text-xs text-neutral-400">
+					<div className="pointer-events-none absolute left-3 bottom-2.5 text-xs text-[color:var(--ember-soft-gray)]">
 						{person.description.length} / {DESC_MAX}
 					</div>
 					<button
@@ -430,12 +430,12 @@ function PersonForm({
 						className={`absolute right-2 bottom-2 flex h-7 w-7 items-center justify-center rounded-full border transition-colors ${
 							recording
 								? "border-red-500 bg-red-500"
-								: "border-neutral-300 bg-white hover:bg-neutral-100"
+								: "border-[color:var(--ember-divider)] bg-[color:var(--ember-card)] hover:bg-neutral-100"
 						} disabled:opacity-50 disabled:cursor-not-allowed`}
 					>
 						{transcribing ? (
 							<svg
-								className="h-3 w-3 animate-spin text-neutral-500"
+								className="h-3 w-3 animate-spin text-[color:var(--ember-warm-gray)]"
 								viewBox="0 0 24 24"
 								fill="none"
 							>
@@ -457,7 +457,7 @@ function PersonForm({
 						) : (
 							<span
 								className={`block h-2 w-2 rounded-full ${
-									recording ? "bg-white animate-pulse" : "bg-neutral-700"
+									recording ? "bg-[color:var(--ember-card)] animate-pulse" : "bg-neutral-700"
 								}`}
 							/>
 						)}
@@ -470,14 +470,14 @@ function PersonForm({
 					<button
 						type="button"
 						onClick={onCancel}
-						className="px-4 py-2 text-sm text-neutral-500 hover:text-neutral-700 transition-colors"
+						className="px-4 py-2 text-sm text-[color:var(--ember-warm-gray)] hover:text-[color:var(--ember-warm-gray)] transition-colors"
 					>
 						Cancel
 					</button>
 					<button
 						type="submit"
 						disabled={!canSave}
-						className="rounded-xl bg-neutral-900 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
+						className="rounded-xl bg-[color:var(--ember-ink)] px-5 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 active:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
 					>
 						Save
 					</button>

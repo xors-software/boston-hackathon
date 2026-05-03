@@ -58,12 +58,12 @@ export default function DeliveryPage() {
 	}
 
 	return (
-		<main className="min-h-dvh bg-white">
+		<main className="min-h-dvh bg-[color:var(--ember-card)]">
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-12 sm:px-8">
 				<button
 					type="button"
 					onClick={() => router.back()}
-					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-neutral-700 transition-colors hover:text-neutral-900"
+					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:text-[color:var(--ember-ink)]"
 				>
 					<svg
 						aria-hidden="true"
@@ -81,10 +81,10 @@ export default function DeliveryPage() {
 				</button>
 
 				<header className="mt-6 mb-8">
-					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-neutral-900">
+					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)]">
 						How would you like to give this gift?
 					</h1>
-					<p className="text-base text-neutral-500 leading-relaxed">
+					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						You can change your mind before sending.
 					</p>
 				</header>
@@ -99,37 +99,37 @@ export default function DeliveryPage() {
 								onClick={() => select(opt.id)}
 								disabled={opt.disabled}
 								aria-pressed={isSelected}
-								className={`w-full text-left rounded-2xl border bg-white px-5 py-4 transition-colors ${
+								className={`w-full text-left rounded-2xl border bg-[color:var(--ember-card)] px-5 py-4 transition-colors ${
 									opt.disabled
-										? "border-neutral-200 cursor-not-allowed opacity-60"
+										? "border-[color:var(--ember-divider)] cursor-not-allowed opacity-60"
 										: isSelected
 											? "border-neutral-900"
-											: "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50"
+											: "border-[color:var(--ember-divider)] hover:border-[color:var(--ember-divider)] hover:bg-[color:var(--ember-cream-light)]"
 								}`}
 							>
 								<div className="flex items-center justify-between gap-4">
 									<div className="min-w-0">
-										<div className="text-base font-semibold text-neutral-900">
+										<div className="text-base font-semibold text-[color:var(--ember-ink)]">
 											{opt.title}
 										</div>
-										<div className="mt-0.5 text-sm text-neutral-500">
+										<div className="mt-0.5 text-sm text-[color:var(--ember-warm-gray)]">
 											{opt.subtitle}
 										</div>
 									</div>
 									{opt.badge ? (
-										<span className="shrink-0 rounded-md border border-neutral-300 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-neutral-600">
+										<span className="shrink-0 rounded-md border border-[color:var(--ember-divider)] px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-[color:var(--ember-warm-gray)]">
 											{opt.badge}
 										</span>
 									) : (
 										<span
 											className={`shrink-0 flex h-5 w-5 items-center justify-center rounded-full border ${
 												isSelected
-													? "border-neutral-900 bg-neutral-900"
-													: "border-neutral-300 bg-white"
+													? "border-neutral-900 bg-[color:var(--ember-ink)]"
+													: "border-[color:var(--ember-divider)] bg-[color:var(--ember-card)]"
 											}`}
 										>
 											{isSelected && (
-												<span className="block h-2 w-2 rounded-full bg-white" />
+												<span className="block h-2 w-2 rounded-full bg-[color:var(--ember-card)]" />
 											)}
 										</span>
 									)}
@@ -142,7 +142,7 @@ export default function DeliveryPage() {
 				<button
 					type="button"
 					onClick={goNext}
-					className="mt-8 w-full rounded-2xl bg-neutral-900 py-4 text-base font-medium text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700"
+					className="ember-cta"
 				>
 					Continue
 				</button>

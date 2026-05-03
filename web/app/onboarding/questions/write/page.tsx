@@ -153,12 +153,12 @@ export default function WriteQuestionPage() {
 	}
 
 	return (
-		<main className="min-h-dvh bg-white">
+		<main className="min-h-dvh bg-[color:var(--ember-card)]">
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-12 sm:px-8">
 				<button
 					type="button"
 					onClick={() => router.back()}
-					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-neutral-700 transition-colors hover:text-neutral-900"
+					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:text-[color:var(--ember-ink)]"
 				>
 					<svg
 						aria-hidden="true"
@@ -176,36 +176,36 @@ export default function WriteQuestionPage() {
 				</button>
 
 				<header className="mt-6 mb-6">
-					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-neutral-900">
+					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)]">
 						Write your own question.
 					</h1>
-					<p className="text-base text-neutral-500 leading-relaxed">
+					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						Make it specific. The best ones are.
 					</p>
 				</header>
 
 				<form onSubmit={handleSubmit} className="flex flex-col gap-5">
 					<label className="flex flex-col gap-2">
-						<span className="text-sm font-medium text-neutral-700">
+						<span className="text-sm font-medium text-[color:var(--ember-warm-gray)]">
 							Question
 						</span>
-						<div className="relative rounded-2xl border border-neutral-200 bg-white focus-within:border-neutral-900 transition-colors">
+						<div className="relative rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] focus-within:border-neutral-900 transition-colors">
 							<textarea
 								value={text}
 								onChange={(e) => setText(e.target.value.slice(0, QUESTION_MAX))}
 								placeholder="What were you thinking about on the drive home from the hospital?"
 								rows={4}
 								autoFocus
-								className="block w-full resize-none rounded-2xl bg-transparent px-4 pt-3 pb-7 text-base text-neutral-900 placeholder:text-neutral-400 outline-none"
+								className="block w-full resize-none rounded-2xl bg-transparent px-4 pt-3 pb-7 text-base text-[color:var(--ember-ink)] placeholder:text-[color:var(--ember-soft-gray)] outline-none"
 							/>
-							<div className="pointer-events-none absolute left-4 bottom-2 text-xs text-neutral-400">
+							<div className="pointer-events-none absolute left-4 bottom-2 text-xs text-[color:var(--ember-soft-gray)]">
 								{text.length} / {QUESTION_MAX}
 							</div>
 						</div>
 					</label>
 
 					<div className="flex flex-col gap-2">
-						<span className="text-sm font-medium text-neutral-700">
+						<span className="text-sm font-medium text-[color:var(--ember-warm-gray)]">
 							Photo (optional)
 						</span>
 						<input
@@ -215,18 +215,23 @@ export default function WriteQuestionPage() {
 							onChange={handlePhotoChange}
 							className="hidden"
 						/>
+<<<<<<< Updated upstream
 						{photoPreview ? (
 							<div className="relative rounded-2xl border border-neutral-200 bg-neutral-50 overflow-hidden">
+=======
+						{photoDataUrl ? (
+							<div className="relative rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-cream-light)] overflow-hidden">
+>>>>>>> Stashed changes
 								<img
 									src={photoPreview}
 									alt="Question photo preview"
 									className="block w-full max-h-64 object-cover"
 								/>
-								<div className="flex items-center justify-end gap-3 px-4 py-2 bg-white border-t border-neutral-200">
+								<div className="flex items-center justify-end gap-3 px-4 py-2 bg-[color:var(--ember-card)] border-t border-[color:var(--ember-divider)]">
 									<button
 										type="button"
 										onClick={() => fileInputRef.current?.click()}
-										className="text-sm text-neutral-700 hover:text-neutral-900 transition-colors"
+										className="text-sm text-[color:var(--ember-warm-gray)] hover:text-[color:var(--ember-ink)] transition-colors"
 									>
 										Replace
 									</button>
@@ -236,7 +241,7 @@ export default function WriteQuestionPage() {
 											setPhotoFile(null)
 											if (fileInputRef.current) fileInputRef.current.value = ""
 										}}
-										className="text-sm text-neutral-500 hover:text-neutral-700 transition-colors"
+										className="text-sm text-[color:var(--ember-warm-gray)] hover:text-[color:var(--ember-warm-gray)] transition-colors"
 									>
 										Remove
 									</button>
@@ -246,7 +251,7 @@ export default function WriteQuestionPage() {
 							<button
 								type="button"
 								onClick={() => fileInputRef.current?.click()}
-								className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 px-5 py-10 text-center transition-colors hover:border-neutral-400 hover:bg-neutral-100"
+								className="rounded-2xl border border-dashed border-[color:var(--ember-divider)] bg-[color:var(--ember-cream-light)] px-5 py-10 text-center transition-colors hover:border-neutral-400 hover:bg-neutral-100"
 							>
 								<div className="flex justify-center mb-3">
 									<svg
@@ -257,13 +262,13 @@ export default function WriteQuestionPage() {
 										strokeWidth="1.75"
 										strokeLinecap="round"
 										strokeLinejoin="round"
-										className="h-7 w-7 text-neutral-400"
+										className="h-7 w-7 text-[color:var(--ember-soft-gray)]"
 									>
 										<line x1="12" y1="5" x2="12" y2="19" />
 										<line x1="5" y1="12" x2="19" y2="12" />
 									</svg>
 								</div>
-								<div className="text-base text-neutral-600">
+								<div className="text-base text-[color:var(--ember-warm-gray)]">
 									Add a photo from camera or library
 								</div>
 							</button>
@@ -274,7 +279,7 @@ export default function WriteQuestionPage() {
 					</div>
 
 					<label className="flex flex-col gap-2">
-						<span className="text-sm font-medium text-neutral-700">
+						<span className="text-sm font-medium text-[color:var(--ember-warm-gray)]">
 							Preface (optional)
 						</span>
 						<input
@@ -282,7 +287,7 @@ export default function WriteQuestionPage() {
 							value={preface}
 							onChange={(e) => setPreface(e.target.value)}
 							placeholder='"When you see this photo, tell me about..."'
-							className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-neutral-900 transition-colors"
+							className="w-full rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] px-4 py-3 text-base text-[color:var(--ember-ink)] placeholder:text-[color:var(--ember-soft-gray)] outline-none focus:border-neutral-900 transition-colors"
 						/>
 					</label>
 
@@ -293,7 +298,7 @@ export default function WriteQuestionPage() {
 					<button
 						type="submit"
 						disabled={!canSave}
-						className="mt-2 w-full rounded-2xl bg-neutral-900 py-4 text-base font-medium text-white transition-colors hover:bg-neutral-800 active:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
+						className="ember-cta"
 					>
 						{submitting ? "Saving…" : "Save question"}
 					</button>
@@ -301,7 +306,7 @@ export default function WriteQuestionPage() {
 					<button
 						type="button"
 						onClick={() => router.back()}
-						className="text-center text-sm text-neutral-500 underline underline-offset-2 hover:text-neutral-700 transition-colors"
+						className="text-center text-sm text-[color:var(--ember-warm-gray)] underline underline-offset-2 hover:text-[color:var(--ember-warm-gray)] transition-colors"
 					>
 						Cancel
 					</button>

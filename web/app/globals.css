@@ -27,6 +27,21 @@
 	/* Font families */
 	--font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
 	--font-mono: var(--font-geist-mono), ui-monospace, monospace;
+	--font-serif: var(--font-fraunces), Georgia, "Times New Roman", serif;
+
+	/* ─── Ember palette ──────────────────────────────────────── */
+	/* The literary "kept journal" theme used across child + parent flows */
+	--ember-cream: #efe7d6;
+	--ember-cream-light: #fdfdfd;
+	--ember-input: #fdfdfd;
+	--ember-card: #fbf6e9;
+	--ember-ink: #1a1410;
+	--ember-warm-gray: #7a6f60;
+	--ember-soft-gray: #b5ab9a;
+	--ember-terracotta: #b0552a;
+	--ember-terracotta-soft: #c87b50;
+	--ember-sage: #4a6d63;
+	--ember-divider: #d4ccba;
 
 	/* Safe-area insets for iOS notch */
 	--safe-top: env(safe-area-inset-top);
@@ -80,6 +95,19 @@
 
 	--font-sans: var(--font-sans);
 	--font-mono: var(--font-mono);
+	--font-serif: var(--font-serif);
+
+	--color-ember-cream: var(--ember-cream);
+	--color-ember-cream-light: var(--ember-cream-light);
+	--color-ember-input: var(--ember-input);
+	--color-ember-card: var(--ember-card);
+	--color-ember-ink: var(--ember-ink);
+	--color-ember-warm-gray: var(--ember-warm-gray);
+	--color-ember-soft-gray: var(--ember-soft-gray);
+	--color-ember-terracotta: var(--ember-terracotta);
+	--color-ember-terracotta-soft: var(--ember-terracotta-soft);
+	--color-ember-sage: var(--ember-sage);
+	--color-ember-divider: var(--ember-divider);
 
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);
@@ -107,6 +135,68 @@
 @layer utilities {
 	.text-balance {
 		text-wrap: balance;
+	}
+
+	/* ─── Ember CTA ──────────────────────────────────────────────── */
+	/* The single canonical "dark pill" button used across child + parent */
+	.ember-cta {
+		width: 100%;
+		background: var(--ember-ink);
+		color: #f7f2e8;
+		border-radius: 999px;
+		padding: 18px 24px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 12px;
+		font-family: var(--font-sans);
+		font-weight: 500;
+		font-size: 16px;
+		letter-spacing: -0.01em;
+		line-height: 1;
+		box-shadow:
+			0 1px 0 rgba(255, 255, 255, 0.08) inset,
+			0 12px 30px -12px rgba(20, 12, 4, 0.55),
+			0 3px 0 rgba(20, 12, 4, 0.18);
+		cursor: pointer;
+		transition:
+			transform 0.15s ease,
+			box-shadow 0.15s ease,
+			opacity 0.15s ease;
+	}
+	.ember-cta:hover:not(:disabled) {
+		transform: translateY(-1px);
+		box-shadow:
+			0 1px 0 rgba(255, 255, 255, 0.08) inset,
+			0 16px 36px -12px rgba(20, 12, 4, 0.6),
+			0 4px 0 rgba(20, 12, 4, 0.18);
+	}
+	.ember-cta:active:not(:disabled) {
+		transform: translateY(1px);
+		box-shadow:
+			0 1px 0 rgba(255, 255, 255, 0.08) inset,
+			0 6px 16px -8px rgba(20, 12, 4, 0.5),
+			0 1px 0 rgba(20, 12, 4, 0.18);
+	}
+	.ember-cta:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+	/* For CTAs that need the text + a trailing arrow icon */
+	.ember-cta-with-arrow {
+		justify-content: space-between;
+		padding-right: 16px;
+	}
+	.ember-cta-arrow {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		border-radius: 999px;
+		background: rgba(255, 255, 255, 0.08);
+		border: 1px solid rgba(255, 255, 255, 0.18);
+		flex-shrink: 0;
 	}
 
 	/* Chrome, Safari and Opera */

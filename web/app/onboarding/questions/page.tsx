@@ -199,12 +199,12 @@ export default function QuestionsPage() {
 	}
 
 	return (
-		<main className="min-h-dvh bg-white">
+		<main className="min-h-dvh bg-[color:var(--ember-card)]">
 			<div className="mx-auto w-full max-w-md px-6 pt-6 pb-32 sm:px-8">
 				<button
 					type="button"
 					onClick={() => router.back()}
-					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-neutral-700 transition-colors hover:text-neutral-900"
+					className="-ml-1 inline-flex items-center gap-1 py-2 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:text-[color:var(--ember-ink)]"
 				>
 					<svg
 						aria-hidden="true"
@@ -222,10 +222,10 @@ export default function QuestionsPage() {
 				</button>
 
 				<header className="mt-6 mb-6">
-					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-neutral-900">
+					<h1 className="mb-3 text-3xl sm:text-[32px] font-semibold tracking-tight leading-tight text-[color:var(--ember-ink)]">
 						Build the questions.
 					</h1>
-					<p className="text-base text-neutral-500 leading-relaxed">
+					<p className="text-base text-[color:var(--ember-warm-gray)] leading-relaxed">
 						Suggested for {recipientPhrase}, based on what you told us.
 					</p>
 				</header>
@@ -235,7 +235,7 @@ export default function QuestionsPage() {
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
 					placeholder="Search questions..."
-					className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-neutral-900 transition-colors"
+					className="w-full rounded-2xl border border-[color:var(--ember-divider)] bg-[color:var(--ember-input)] px-4 py-3 text-base text-[color:var(--ember-ink)] placeholder:text-[color:var(--ember-soft-gray)] outline-none focus:border-neutral-900 transition-colors"
 				/>
 
 				<div className="mt-4 -mx-6 sm:-mx-8 px-6 sm:px-8 overflow-x-auto no-scrollbar">
@@ -256,14 +256,14 @@ export default function QuestionsPage() {
 									}}
 									className={`shrink-0 rounded-full border px-4 py-1.5 text-sm transition-colors ${
 										isActive
-											? "border-neutral-900 bg-neutral-900 text-white"
-											: "border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400"
+											? "border-neutral-900 bg-[color:var(--ember-ink)] text-white"
+											: "border-[color:var(--ember-divider)] bg-[color:var(--ember-card)] text-[color:var(--ember-warm-gray)] hover:border-neutral-400"
 									}`}
 								>
 									{tab.label}
 									{count != null && (
 										<span
-											className={`ml-1.5 ${isActive ? "text-white/80" : "text-neutral-400"}`}
+											className={`ml-1.5 ${isActive ? "text-white/80" : "text-[color:var(--ember-soft-gray)]"}`}
 										>
 											{count}
 										</span>
@@ -293,21 +293,21 @@ export default function QuestionsPage() {
 								type="button"
 								onClick={() => toggle(q.id)}
 								aria-pressed={isSelected}
-								className={`w-full text-left rounded-2xl border bg-white px-5 py-4 transition-colors ${
+								className={`w-full text-left rounded-2xl border bg-[color:var(--ember-card)] px-5 py-4 transition-colors ${
 									isSelected
 										? "border-neutral-900"
-										: "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50"
+										: "border-[color:var(--ember-divider)] hover:border-[color:var(--ember-divider)] hover:bg-[color:var(--ember-cream-light)]"
 								}`}
 							>
 								<div className="flex items-center justify-between gap-3">
-									<span className="text-base text-neutral-900 leading-snug">
+									<span className="text-base text-[color:var(--ember-ink)] leading-snug">
 										{q.text}
 									</span>
 									<span
 										className={`shrink-0 flex h-7 w-7 items-center justify-center rounded-full border transition-colors ${
 											isSelected
-												? "border-neutral-900 bg-neutral-900 text-white"
-												: "border-neutral-300 bg-white text-neutral-400"
+												? "border-neutral-900 bg-[color:var(--ember-ink)] text-white"
+												: "border-[color:var(--ember-divider)] bg-[color:var(--ember-card)] text-[color:var(--ember-soft-gray)]"
 										}`}
 									>
 										{isSelected ? (
@@ -345,7 +345,7 @@ export default function QuestionsPage() {
 					})}
 
 					{visibleQuestions.length === 0 && (
-						<p className="px-1 py-6 text-sm text-neutral-500">
+						<p className="px-1 py-6 text-sm text-[color:var(--ember-warm-gray)]">
 							No questions match. Try a different search or write your own.
 						</p>
 					)}
@@ -353,24 +353,24 @@ export default function QuestionsPage() {
 					<button
 						type="button"
 						onClick={goWriteOwn}
-						className="mt-2 w-full rounded-2xl border border-dashed border-neutral-300 bg-white px-5 py-4 text-base text-neutral-700 transition-colors hover:border-neutral-400 hover:bg-neutral-50"
+						className="mt-2 w-full rounded-2xl border border-dashed border-[color:var(--ember-divider)] bg-[color:var(--ember-card)] px-5 py-4 text-base text-[color:var(--ember-warm-gray)] transition-colors hover:border-neutral-400 hover:bg-[color:var(--ember-cream-light)]"
 					>
 						+ Write your own question
 					</button>
 				</div>
 			</div>
 
-			<div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200">
+			<div className="fixed bottom-0 left-0 right-0 bg-[color:var(--ember-card)] border-t border-[color:var(--ember-divider)]">
 				<div className="mx-auto w-full max-w-md px-6 py-4 sm:px-8 flex items-center justify-between">
-					<span className="text-sm text-neutral-700">
+					<span className="text-sm text-[color:var(--ember-warm-gray)]">
 						<span className="font-semibold">{selectedIds.length} selected</span>
-						<span className="text-neutral-500"> · {MIN_SELECTED} minimum</span>
+						<span className="text-[color:var(--ember-warm-gray)]"> · {MIN_SELECTED} minimum</span>
 					</span>
 					<button
 						type="button"
 						onClick={goReview}
 						disabled={selectedIds.length < MIN_SELECTED}
-						className="inline-flex items-center gap-1 text-sm font-medium text-neutral-900 underline underline-offset-2 transition-colors hover:text-neutral-700 disabled:text-neutral-400 disabled:no-underline"
+						className="inline-flex items-center gap-1 text-sm font-medium text-[color:var(--ember-ink)] underline underline-offset-2 transition-colors hover:text-[color:var(--ember-warm-gray)] disabled:text-[color:var(--ember-soft-gray)] disabled:no-underline"
 					>
 						Review <span aria-hidden="true">→</span>
 					</button>

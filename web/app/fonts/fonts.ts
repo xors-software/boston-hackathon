@@ -1,5 +1,14 @@
 import localFont from "next/font/local"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Geist, Geist_Mono, Fraunces } from "next/font/google"
+
+// Fraunces - Editorial serif w/ strong italic for the Ember "kept journal" voice
+const FrauncesSerif = Fraunces({
+	subsets: ["latin"],
+	variable: "--font-fraunces",
+	display: "swap",
+	weight: ["400", "500", "600", "700"],
+	style: ["normal", "italic"],
+})
 
 // Geist - Modern sans-serif from Vercel
 const GeistSans = Geist({
@@ -118,4 +127,11 @@ const Iosevka = localFont({
 	display: "swap",
 })
 
-export { GeistSans, GeistMono, Printvetica, Iosevka, NeueHaasGrotesk }
+export {
+	GeistSans,
+	GeistMono,
+	Printvetica,
+	Iosevka,
+	NeueHaasGrotesk,
+	FrauncesSerif,
+}
